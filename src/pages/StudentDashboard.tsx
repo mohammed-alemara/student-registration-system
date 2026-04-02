@@ -410,12 +410,12 @@ export default function StudentDashboard() {
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative h-80 w-full bg-gray-200">
+            <div className="relative aspect-[3.5/4.5] w-full max-h-[60vh] mx-auto bg-gray-200">
               <Cropper
                 image={tempImage}
                 crop={crop}
                 zoom={zoom}
-                aspect={1}
+                aspect={3.5 / 4.5}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
@@ -480,7 +480,7 @@ export default function StudentDashboard() {
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-800">الصورة الشخصية (JPG فقط، الحد الأقصى 500KB)</label>
                   <div className="mt-1 flex items-center space-x-4 space-x-reverse">
-                    <div className="relative flex-shrink-0 h-32 w-32 border-2 border-dashed border-blue-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center transition-all hover:border-blue-400 group">
+                    <div className="relative flex-shrink-0 h-40 w-32 border-2 border-dashed border-blue-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center transition-all hover:border-blue-400 group">
                       {photoPreview ? (
                         <>
                           <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" loading="lazy" />
