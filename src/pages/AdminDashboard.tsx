@@ -115,18 +115,24 @@ export default function AdminDashboard() {
     
     try {
       setActionLoading(true);
+      
+      // استبعاد الحقول التي لا يمكن تعديلها (مثل المعرفات والحقول التلقائية)
+      // إرسال هذه الحقول في طلب التحديث يتسبب في رفض الطلب من قبل Supabase
+      const { id, student_id, student_number, created_at, ...updateData } = selectedStudent as any;
+
       const { error } = await supabase
         .from('student_registrations')
-        .update(selectedStudent)
-        .eq('id', selectedStudent.id);
+        .update(updateData)
+        .eq('id', id);
 
       if (error) throw error;
       
       await fetchStudents();
       setIsModalOpen(false);
+      alert('تم تحديث بيانات الطالب بنجاح');
     } catch (err) {
       console.error('Error updating:', err);
-      alert('حدث خطأ أثناء التحديث');
+      alert('حدث خطأ أثناء التحديث. يرجى التأكد من صلاحيات المشرف في قاعدة البيانات.');
     } finally {
       setActionLoading(false);
     }

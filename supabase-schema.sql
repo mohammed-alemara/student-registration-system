@@ -238,6 +238,22 @@ create policy "Admins can view all registrations." on student_registrations
     )
   );
 
+create policy "Admins can update all registrations." on student_registrations
+  for update using (
+    exists (
+      select 1 from profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+
+create policy "Admins can delete registrations." on student_registrations
+  for delete using (
+    exists (
+      select 1 from profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );
+
 create policy "Students can insert their own registration." on student_registrations
   for insert with check (auth.uid() = student_id);
 
