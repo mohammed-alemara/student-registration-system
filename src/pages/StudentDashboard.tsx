@@ -208,12 +208,17 @@ export default function StudentDashboard() {
       const { error: dbError } = await supabase
         .from('student_registrations')
         .upsert({
-          student_id: user.id,
           ...formData,
+          student_id: user.id,
           photo_url: finalPhotoUrl,
+          // ضمان مطابقة قيد gov_employee_logic: إذا كان ليس موظفاً، يجب أن يكون القسم نصاً فارغاً
+          gov_department: formData.is_gov_employee === 'لا' ? '' : formData.gov_department,
         }, { onConflict: 'student_id' });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        // معالجة أخطاء قيود قاعدة البيانات (Check Constraints)
+        throw dbError;
+      }
       
       setFormData(prev => ({ ...prev, photo_url: finalPhotoUrl }));
       setSuccess(true);
