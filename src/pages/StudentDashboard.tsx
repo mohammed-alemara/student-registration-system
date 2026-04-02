@@ -483,20 +483,20 @@ export default function StudentDashboard() {
 
       {/* واجهة قص الصورة (Modal) */}
       {showCropper && tempImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-          <div className="bg-white rounded-xl overflow-hidden w-full max-w-lg shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 sm:p-6">
+          <div className="bg-white rounded-xl overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="text-lg font-bold text-gray-900 flex items-center">
                 <Scissors className="ml-2 h-5 w-5 text-blue-600" />
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative h-[450px] sm:h-[500px] w-full mx-auto bg-gray-900 overflow-hidden">
+            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[300px]">
               <Cropper
                 image={tempImage}
                 crop={crop}
-                zoom={zoom}
-                aspect={3.5 / 4.5}
+                zoom={zoom} // حافظ على Zoom
+                aspect={3.5 / 4.5} // تعديل نسبة العرض إلى الارتفاع
                 showGrid={true}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
