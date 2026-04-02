@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { LogIn, UserPlus, AlertTriangle, Loader2 } from 'lucide-react';
+import { LogIn, UserPlus, AlertTriangle, Loader2, CheckCircle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,7 +9,13 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const navigate = useNavigate();
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   if (!isSupabaseConfigured) {
     return (
@@ -111,6 +117,20 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-cairo" dir="rtl">
+      {/* Toast Notification Component */}
+      {toast && (
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-4 space-x-4 space-x-reverse rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border bg-white/90 backdrop-blur-xl transition-all duration-500 animate-in fade-in slide-in-from-top-5 ${
+          toast.type === 'success' 
+            ? 'border-green-100 text-green-600' 
+            : 'border-red-100 text-red-600'
+        }`}>
+          <div className={`p-2.5 rounded-2xl ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+            {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+          </div>
+          <p className="font-black text-lg ml-2">{toast.message}</p>
+        </div>
+      )}
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-[2rem] shadow-xl shadow-blue-500/20 mb-6">
           <LogIn className="text-white h-10 w-10" />

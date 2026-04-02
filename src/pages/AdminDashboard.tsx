@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -88,19 +90,25 @@ export default function AdminDashboard() {
     navigate('/');
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف سجل هذا الطالب نهائياً؟')) return;
-    
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
       setActionLoading(true);
-      const { error } = await supabase.from('student_registrations').delete().eq('id', id);
+      const { error } = await supabase.from('student_registrations').delete().eq('id', deleteConfirmId);
       if (error) throw error;
-      setStudents(students.filter(s => s.id !== id));
+      setStudents(students.filter(s => s.id !== deleteConfirmId));
+      showToast('تم حذف سجل الطالب بنجاح');
     } catch (err) {
       console.error('Error deleting:', err);
-      alert('حدث خطأ أثناء الحذف');
+      showToast('حدث خطأ أثناء محاولة الحذف', 'error');
     } finally {
       setActionLoading(false);
+      setDeleteConfirmId(null);
     }
   };
 
@@ -129,10 +137,10 @@ export default function AdminDashboard() {
       
       await fetchStudents();
       setIsModalOpen(false);
-      alert('تم تحديث بيانات الطالب بنجاح');
+      showToast('تم تحديث بيانات الطالب بنجاح');
     } catch (err) {
       console.error('Error updating:', err);
-      alert('حدث خطأ أثناء التحديث. يرجى التأكد من صلاحيات المشرف في قاعدة البيانات.');
+      showToast('فشل التحديث. تأكد من صلاحيات قاعدة البيانات.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -143,8 +151,69 @@ export default function AdminDashboard() {
     student.mother_name.includes(searchTerm)
   );
 
+  const getApplicationTypeColor = (type: string) => {
+    switch (type) {
+      case 'المرحلة الابتدائية':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+      case 'المرحلة المتوسطة':
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'المرحلة الاعدادية (العلمي)':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'المرحلة الاعدادية (الادبي)':
+        return 'bg-amber-50 text-amber-700 border-amber-100';
+      case 'الخريجون':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-100';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
+      {/* Toast Notification Component */}
+      {toast && (
+        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-4 space-x-4 space-x-reverse rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border bg-white/90 backdrop-blur-xl transition-all duration-500 animate-in fade-in slide-in-from-top-5 ${
+          toast.type === 'success' 
+            ? 'border-green-100 text-green-600' 
+            : 'border-red-100 text-red-600'
+        }`}>
+          <div className={`p-2.5 rounded-2xl ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+            {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+          </div>
+          <p className="font-black text-lg ml-2">{toast.message}</p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl p-8 max-w-sm w-full text-center border border-slate-100 scale-in-center">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="h-10 w-10 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">تأكيد الحذف</h3>
+            <p className="text-slate-500 mb-8 font-medium leading-relaxed">
+              هل أنت متأكد من حذف سجل الطالب؟ <br/> <span className="text-red-500 text-sm">هذا الإجراء لا يمكن التراجع عنه.</span>
+            </p>
+            <div className="flex space-x-3 space-x-reverse">
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-black transition-all"
+              >
+                إلغاء
+              </button>
+              <button 
+                onClick={confirmDelete}
+                disabled={actionLoading}
+                className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black shadow-lg shadow-red-200 transition-all flex items-center justify-center"
+              >
+                {actionLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'نعم، احذف'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -308,6 +377,9 @@ export default function AdminDashboard() {
                     التسلسلي
                   </th>
                   <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    نوع التقديم
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     الاسم الرباعي
                   </th>
                   <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -330,7 +402,7 @@ export default function AdminDashboard() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-20 whitespace-nowrap text-center">
+                    <td colSpan={8} className="px-6 py-20 whitespace-nowrap text-center">
                       <div className="flex flex-col items-center justify-center">
                         <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-3" />
                         <span className="text-slate-500 font-medium">جاري التحميل...</span>
@@ -339,7 +411,7 @@ export default function AdminDashboard() {
                   </tr>
                 ) : filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 whitespace-nowrap text-center text-sm text-slate-400">
+                    <td colSpan={8} className="px-6 py-12 whitespace-nowrap text-center text-sm text-slate-400">
                       لا يوجد طلبة مسجلين
                     </td>
                   </tr>
@@ -348,6 +420,11 @@ export default function AdminDashboard() {
                     <tr key={student.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                       <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-slate-500">
                         <span className="bg-slate-100 px-2 py-1 rounded-md">#{student.student_number}</span>
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap text-sm">
+                        <span className={`px-3 py-1 rounded-full border font-bold text-[10px] ${getApplicationTypeColor(student.application_type)}`}>
+                          {student.application_type}
+                        </span>
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-slate-900">
                         {student.first_name} {student.father_name} {student.grandfather_name} {student.great_grandfather_name}
@@ -383,7 +460,7 @@ export default function AdminDashboard() {
                             <Edit2 className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(student.id)}
+                            onClick={() => setDeleteConfirmId(student.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="حذف"
                           >
