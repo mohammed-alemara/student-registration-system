@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import logo from '../../logo.png';
 import { supabase, StudentRegistration, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, Search, AlertTriangle, Loader2, Eye, Edit2, Trash2, X, Save, CheckCircle } from 'lucide-react';
@@ -227,10 +228,8 @@ export default function AdminDashboard() {
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Users className="text-white h-6 w-6" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
               <h1 className="text-xl font-black text-slate-900">
                 لوحة المشرف
               </h1>

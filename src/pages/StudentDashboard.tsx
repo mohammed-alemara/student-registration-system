@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import logo from '../../logo.png';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
@@ -461,10 +462,8 @@ export default function StudentDashboard() {
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <CheckCircle className="text-white h-5 w-5" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
               <h1 className="text-xl font-bold text-slate-900">لوحة الطالب</h1>
             </div>
             <div className="flex items-center">
@@ -581,9 +580,9 @@ export default function StudentDashboard() {
                   {formErrors.application_type && <p className="mt-1.5 text-[10px] font-bold text-red-500 flex items-center animate-in slide-in-from-right-1"><AlertTriangle className="w-3 h-3 ml-1" /> هذا الحقل مطلوب</p>}
                 </div>
 
-                {/* Photo Upload */}
+                {/* Section Separator */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">صورة الطالب/ة</h4>
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
                 <div className="sm:col-span-2">
@@ -640,8 +639,14 @@ export default function StudentDashboard() {
                     />
                   </div>
                 </div>
+
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Personal Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">البيانات الشخصية</h4>
                 </div>
 
@@ -685,8 +690,13 @@ export default function StudentDashboard() {
                   {formErrors.date_of_birth && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Additional Personal Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات شخصية إضافية</h4>
                 </div>
 
@@ -786,8 +796,13 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* National ID Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات البطاقة الوطنية الموحدة</h4>
                 </div>
 
@@ -814,8 +829,13 @@ export default function StudentDashboard() {
                   {formErrors.national_id_issuer && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Residence Card Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات بطاقة السكن</h4>
                 </div>
 
@@ -842,8 +862,13 @@ export default function StudentDashboard() {
                   {formErrors.residence_card_issuer && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Mother's Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">بيانات الأم</h4>
                 </div>
 
@@ -865,8 +890,13 @@ export default function StudentDashboard() {
                   {formErrors.mother_grandfather_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Address Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">عنوان السكن</h4>
                 </div>
 
@@ -923,8 +953,13 @@ export default function StudentDashboard() {
                   <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
+                {/* Section Separator */}
+                <div className="sm:col-span-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
+                </div>
+
                 {/* Previous Education Info */}
-                <div className="sm:col-span-2 mt-4">
+                <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات الدراسة السابقة</h4>
                 </div>
 

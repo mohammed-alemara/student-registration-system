@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from '../../logo.png';
 import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { LogIn, UserPlus, AlertTriangle, Loader2, CheckCircle, X, Eye, EyeOff } from 'lucide-react';
@@ -163,9 +164,7 @@ export default function Login() {
       )}
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-[2rem] shadow-xl shadow-blue-500/30 mb-6 animate-in fade-in zoom-in duration-500">
-          <LogIn className="text-white h-10 w-10" />
-        </div>
+        <img src={logo} alt="شعار التربية" className="mx-auto w-32 h-32 object-contain mb-6 animate-in fade-in zoom-in duration-500" />
         <h2 className="text-4xl font-black text-slate-900 tracking-tight">
           {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
         </h2>
