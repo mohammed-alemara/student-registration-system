@@ -60,14 +60,20 @@ export default function Login() {
             .eq('id', data.user.id)
             .single();
             
-          if (profileError && profileError.code !== 'PGRST116') {
+          if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
              console.error('Error fetching profile:', profileError);
+             throw new Error('حدث خطأ أثناء جلب معلومات المستخدم.');
           }
           
+          // If profile is null or role is not 'admin' or 'student', log out
+          // This handles cases where a user exists in auth.users but not in profiles, or has an unrecognized role
           if (profile?.role === 'admin') {
             navigate('/admin');
-          } else {
+          } else if (profile?.role === 'student') {
             navigate('/student');
+          } else {
+            await supabase.auth.signOut(); // Log out the user
+            throw new Error('لا يوجد دور محدد لهذا الحساب. يرجى مراجعة الإدارة.');
           }
         }
       } else {

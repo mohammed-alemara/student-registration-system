@@ -76,6 +76,11 @@ export default function StudentDashboard() {
     );
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
   const checkUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -84,53 +89,86 @@ export default function StudentDashboard() {
         return;
       }
 
-      // Check if student already has a registration
-      const { data, error } = await supabase
+      // Fetch user profile to determine role
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found (expected if no profile yet)
+        console.error('Error fetching profile:', profileError);
+        await handleLogout(); // Log out if there's a serious error fetching profile
+        return;
+      }
+
+      if (!profile) {
+        // User exists in auth.users but not in profiles table.
+        // This means they are not a registered student or admin. Log out.
+        await handleLogout();
+        return;
+      }
+
+      // 2. التحقق مما إذا كان المستخدم طالباً مسجلاً بالفعل
+      const { data: studentRecord } = await supabase
         .from('student_registrations')
         .select('*')
         .eq('student_id', user.id)
         .single();
 
-      if (data) {
+      if (studentRecord) {
         setFormData({
-          first_name: data.first_name || '',
-          father_name: data.father_name || '',
-          grandfather_name: data.grandfather_name || '',
-          great_grandfather_name: data.great_grandfather_name || '',
-          gender: data.gender || '',
-          date_of_birth: data.date_of_birth || '',
-          mother_name: data.mother_name || '',
-          mother_father_name: data.mother_father_name || '',
-          mother_grandfather_name: data.mother_grandfather_name || '',
-          district: data.district || '',
-          sub_district: data.sub_district || '',
-          neighborhood: data.neighborhood || '',
-          mahalla: data.mahalla || '',
-          alley: data.alley || '',
-          house_number: data.house_number || '',
-          place_of_birth: data.place_of_birth || '',
-          marital_status: data.marital_status || '',
-          mobile_number: data.mobile_number || '',
-          religion: data.religion || '',
-          ethnicity: data.ethnicity || '',
-          father_life_status: data.father_life_status || '',
-          is_gov_employee: data.is_gov_employee || '',
-          gov_department: data.gov_department || '',
-          national_id_number: data.national_id_number || '',
-          national_id_date: data.national_id_date || '',
-          national_id_issuer: data.national_id_issuer || '',
-          residence_card_number: data.residence_card_number || '',
-          residence_card_date: data.residence_card_date || '',
-          residence_card_issuer: data.residence_card_issuer || '',
-          previous_school_name: data.previous_school_name || '',
-          education_directorate: data.education_directorate || '',
-          photo_url: data.photo_url || '',
-          application_type: data.application_type || '',
+          first_name: studentRecord.first_name || '',
+          father_name: studentRecord.father_name || '',
+          grandfather_name: studentRecord.grandfather_name || '',
+          great_grandfather_name: studentRecord.great_grandfather_name || '',
+          gender: studentRecord.gender || '',
+          date_of_birth: studentRecord.date_of_birth || '',
+          mother_name: studentRecord.mother_name || '',
+          mother_father_name: studentRecord.mother_father_name || '',
+          mother_grandfather_name: studentRecord.mother_grandfather_name || '',
+          district: studentRecord.district || '',
+          sub_district: studentRecord.sub_district || '',
+          neighborhood: studentRecord.neighborhood || '',
+          mahalla: studentRecord.mahalla || '',
+          alley: studentRecord.alley || '',
+          house_number: studentRecord.house_number || '',
+          place_of_birth: studentRecord.place_of_birth || '',
+          marital_status: studentRecord.marital_status || '',
+          mobile_number: studentRecord.mobile_number || '',
+          religion: studentRecord.religion || '',
+          ethnicity: studentRecord.ethnicity || '',
+          father_life_status: studentRecord.father_life_status || '',
+          is_gov_employee: studentRecord.is_gov_employee || '',
+          gov_department: studentRecord.gov_department || '',
+          national_id_number: studentRecord.national_id_number || '',
+          national_id_date: studentRecord.national_id_date || '',
+          national_id_issuer: studentRecord.national_id_issuer || '',
+          residence_card_number: studentRecord.residence_card_number || '',
+          residence_card_date: studentRecord.residence_card_date || '',
+          residence_card_issuer: studentRecord.residence_card_issuer || '',
+          previous_school_name: studentRecord.previous_school_name || '',
+          education_directorate: studentRecord.education_directorate || '',
+          photo_url: studentRecord.photo_url || '',
+          application_type: studentRecord.application_type || '',
         });
-        if (data.photo_url) {
-          setPhotoPreview(data.photo_url);
+        if (studentRecord.photo_url) {
+          setPhotoPreview(studentRecord.photo_url);
         }
-        setSuccess(true);
+        setSuccess(true); // Indicate that data was loaded successfully
+      } else {
+        // Student profile exists, but no registration record.
+        // They should be allowed to fill the form.
+        setSuccess(false); // Ensure success state is false for new registrations
+      }
+
+      // Handle role-based redirection after fetching student data
+      if (profile.role === 'admin') {
+        navigate('/admin'); // Redirect admin to admin dashboard
+        return;
+      } else if (profile.role !== 'student') {
+        // If role is not 'student' (and not 'admin' which was handled above), log out.
+        await handleLogout();
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -138,12 +176,6 @@ export default function StudentDashboard() {
       setFetching(false);
     }
   };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -336,22 +368,22 @@ export default function StudentDashboard() {
 
                 <div>
                   <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">الاسم الأول</label>
-                  <input type="text" name="first_name" id="first_name" required value={formData.first_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
+                  <input type="text" name="first_name" id="first_name" required maxLength={100} value={formData.first_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
                 </div>
 
                 <div>
                   <label htmlFor="father_name" className="block text-sm font-medium text-gray-700">اسم الأب</label>
-                  <input type="text" name="father_name" id="father_name" required value={formData.father_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
+                  <input type="text" name="father_name" id="father_name" required maxLength={100} value={formData.father_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
                 </div>
 
                 <div>
                   <label htmlFor="grandfather_name" className="block text-sm font-medium text-gray-700">اسم الجد</label>
-                  <input type="text" name="grandfather_name" id="grandfather_name" required value={formData.grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
+                  <input type="text" name="grandfather_name" id="grandfather_name" required maxLength={100} value={formData.grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
                 </div>
 
                 <div>
                   <label htmlFor="great_grandfather_name" className="block text-sm font-medium text-gray-700">اسم والد الجد</label>
-                  <input type="text" name="great_grandfather_name" id="great_grandfather_name" required value={formData.great_grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
+                  <input type="text" name="great_grandfather_name" id="great_grandfather_name" required maxLength={100} value={formData.great_grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
                 </div>
 
                 <div>
@@ -457,7 +489,7 @@ export default function StudentDashboard() {
                 {formData.is_gov_employee === 'نعم' && (
                   <div>
                     <label htmlFor="gov_department" className="block text-sm font-medium text-gray-700">اسم الدائرة التي تعمل بها</label>
-                    <input type="text" name="gov_department" id="gov_department" required={formData.is_gov_employee === 'نعم'} value={formData.gov_department} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
+                    <input type="text" name="gov_department" id="gov_department" required={formData.is_gov_employee === 'نعم'} maxLength={150} value={formData.gov_department} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border" />
                   </div>
                 )}
 
