@@ -613,13 +613,13 @@ export default function StudentDashboard() {
                         <Info className="w-4 h-4 ml-2 text-blue-600" />
                         تعليمات الصورة الشخصية:
                       </h5>
-                      <ul className="space-y-2 text-[13px] text-slate-600 leading-snug">
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> يجب أن تكون ملونة وصيغتها <span className="font-bold px-1 text-slate-900">JPG</span> بحجم لا يتجاوز&nbsp;<span className="font-bold text-red-500 inline-block" dir="ltr">500 KB</span>.</li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> أبعاد عمودية <span className="inline-block font-bold px-1" dir="ltr">(400x600)</span> بكسل كحد أدنى مع تغطية الوجه لـ&nbsp;<span className="font-bold text-slate-900 inline-block px-1" dir="rtl">%80-70</span> من المساحة.</li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> التقطت خلال آخر <span className="font-bold text-slate-900 inline-block px-1">6 أشهر</span> وبخلفية بيضاء ساطعة ومتناسقة.</li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> الوجه باتجاه الكاميرا مباشرة، العينان مفتوحتان، وبدون تعبيرات خاصة.</li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> الالتزام بالملابس اليومية العادية (تجنب الزي العسكري، الديني، أو التقليدي).</li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> تُرفض الصور الممسوحة ضوئياً (Scanner) أو المأخوذة من الجواز/الرخصة أو صور الموبايل ضعيفة الجودة.</li>
+                      <ul className="space-y-3 text-[14px] text-slate-600 leading-normal">
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>يجب أن تكون ملونة وصيغتها <span className="font-bold text-slate-900">JPG</span> بحجم لا يتجاوز <span className="font-bold text-red-600 whitespace-nowrap" dir="ltr">500 KB</span>.</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>أبعاد عمودية <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">(400x600)</span> بكسل كحد أدنى مع تغطية الوجه لـ <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">70% - 80%</span> من المساحة.</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>التقطت خلال آخر <span className="font-bold text-slate-900">6 أشهر</span> وبخلفية بيضاء ساطعة ومتناسقة.</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>الوجه باتجاه الكاميرا مباشرة، العينان مفتوحتان، وبدون تعبيرات خاصة.</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>الالتزام بالملابس اليومية العادية (تجنب الزي العسكري، الديني، أو التقليدي).</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>تُرفض الصور الممسوحة ضوئياً (Scanner) أو المأخوذة من الجواز/الرخصة أو صور الموبايل ضعيفة الجودة.</span></li>
                       </ul>
                       
                       {formErrors.photo && (
