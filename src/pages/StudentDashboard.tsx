@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2 } from 'lucide-react';
+import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
 import Cropper from 'react-easy-crop';
 import { Point, Area } from 'react-easy-crop/types';
@@ -491,7 +491,7 @@ export default function StudentDashboard() {
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative aspect-[3.5/4.5] w-full max-h-[60vh] mx-auto bg-gray-200">
+            <div className="relative h-[450px] sm:h-[500px] w-full mx-auto bg-gray-900 overflow-hidden">
               <Cropper
                 image={tempImage}
                 crop={crop}
@@ -504,9 +504,9 @@ export default function StudentDashboard() {
               />
               {/* دليل إضافي لمساعدة الطالب على موازنة الأعين والأنف في المنتصف */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-full h-[1px] bg-yellow-400/60 shadow-[0_0_1px_black]"></div>
-                <div className="absolute w-[1px] h-full bg-yellow-400/60 shadow-[0_0_1px_black]"></div>
-                <div className="absolute w-20 h-28 border-2 border-yellow-400/50 shadow-[0_0_2px_black] rounded-[50%]"></div>
+                <div className="w-full h-[0.5px] bg-white/20"></div>
+                <div className="absolute w-[0.5px] h-full bg-white/20"></div>
+                <div className="absolute w-32 h-44 border border-blue-500/30 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
               </div>
             </div>
 
@@ -590,7 +590,7 @@ export default function StudentDashboard() {
                   <label className="block text-sm font-black text-slate-700 mb-1 mr-1">
                     الصورة الشخصية الرسمية <span className="text-red-500 mr-1">*</span>
                   </label>
-                  <div className="mt-2 flex flex-col items-start gap-4">
+                  <div className="mt-2 flex flex-col md:flex-row gap-6 items-stretch">
                     <label 
                       htmlFor="photo" 
                       className={`relative flex-shrink-0 h-44 w-32 cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-400 bg-red-50/30 ring-4 ring-red-500/5' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10'}`}
@@ -607,6 +607,29 @@ export default function StudentDashboard() {
                       )}
                     </label>
 
+                    <div className="flex-1 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/20"></div>
+                      <h5 className="flex items-center text-xs font-black text-slate-700 mb-3">
+                        <Info className="w-4 h-4 ml-2 text-blue-600" />
+                        تعليمات الصورة الشخصية:
+                      </h5>
+                      <ul className="space-y-2 text-[13px] text-slate-600 leading-snug">
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> يجب أن تكون ملونة وصيغتها <span className="font-bold px-1 text-slate-900">JPG</span> بحجم لا يتجاوز&nbsp;<span className="font-bold text-red-500 inline-block" dir="ltr">500 KB</span>.</li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> أبعاد عمودية <span className="inline-block font-bold px-1" dir="ltr">(400x600)</span> بكسل كحد أدنى مع تغطية الوجه لـ&nbsp;<span className="font-bold text-slate-900 inline-block px-1" dir="rtl">%80-70</span> من المساحة.</li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> التقطت خلال آخر <span className="font-bold text-slate-900 inline-block px-1">6 أشهر</span> وبخلفية بيضاء ساطعة ومتناسقة.</li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> الوجه باتجاه الكاميرا مباشرة، العينان مفتوحتان، وبدون تعبيرات خاصة.</li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> الالتزام بالملابس اليومية العادية (تجنب الزي العسكري، الديني، أو التقليدي).</li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1">•</span> تُرفض الصور الممسوحة ضوئياً (Scanner) أو المأخوذة من الجواز/الرخصة أو صور الموبايل ضعيفة الجودة.</li>
+                      </ul>
+                      
+                      {formErrors.photo && (
+                        <div className="mt-3 flex items-center gap-2 p-2 bg-red-100/50 rounded-xl animate-shake">
+                          <AlertTriangle className="w-3 h-3 text-red-600" />
+                          <span className="text-[10px] font-black text-red-600">يرجى رفع صورة مطابقة للتعليمات</span>
+                        </div>
+                      )}
+                    </div>
+
                     <input
                       type="file"
                       id="photo"
@@ -615,13 +638,6 @@ export default function StudentDashboard() {
                       onChange={handlePhotoChange}
                       className="hidden"
                     />
-
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-400 leading-relaxed">
-                        الصيغة المطلوبة: JPG فقط. الحجم الأقصى: 500 كيلوبايت. يفضل خلفية بيضاء.
-                      </p>
-                      {formErrors.photo && <p className="mt-1.5 text-[10px] font-bold text-red-500 flex items-center animate-in slide-in-from-right-1"><AlertTriangle className="w-3 h-3 ml-1" /> يرجى رفع صورة الطالب</p>}
-                    </div>
                   </div>
                 </div>
                 {/* Personal Info */}
