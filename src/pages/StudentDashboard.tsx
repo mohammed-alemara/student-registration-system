@@ -564,7 +564,7 @@ export default function StudentDashboard() {
                 
                 {/* Application Type */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">نوع التقديم</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">نوع التقديم</h4>
                 </div>
                 
                 <div className="sm:col-span-2">
@@ -647,7 +647,7 @@ export default function StudentDashboard() {
 
                 {/* Personal Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">البيانات الشخصية</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">البيانات الشخصية</h4>
                 </div>
 
                 <div>
@@ -697,7 +697,7 @@ export default function StudentDashboard() {
 
                 {/* Additional Personal Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات شخصية إضافية</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات شخصية إضافية</h4>
                 </div>
 
                 <div>
@@ -803,7 +803,7 @@ export default function StudentDashboard() {
 
                 {/* National ID Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات البطاقة الوطنية الموحدة</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات البطاقة الوطنية الموحدة</h4>
                 </div>
 
                 <div>
@@ -836,7 +836,7 @@ export default function StudentDashboard() {
 
                 {/* Residence Card Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات بطاقة السكن</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات بطاقة السكن</h4>
                 </div>
 
                 <div>
@@ -869,7 +869,7 @@ export default function StudentDashboard() {
 
                 {/* Mother's Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">بيانات الأم</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">بيانات الأم</h4>
                 </div>
 
                 <div>
@@ -897,7 +897,7 @@ export default function StudentDashboard() {
 
                 {/* Address Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">عنوان السكن</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">عنوان السكن</h4>
                 </div>
 
                 <div>
@@ -960,7 +960,7 @@ export default function StudentDashboard() {
 
                 {/* Previous Education Info */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات الدراسة السابقة</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات الدراسة السابقة</h4>
                 </div>
 
                 <div>
