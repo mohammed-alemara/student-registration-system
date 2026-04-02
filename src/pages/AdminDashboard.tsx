@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, StudentRegistration, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Search, AlertTriangle } from 'lucide-react';
+import { LogOut, Users, Search, AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-cairo" dir="rtl">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-md shadow-sm">
             <div className="flex items-center">
@@ -90,20 +90,22 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
+      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900 flex items-center">
-                <Users className="ml-2 h-6 w-6 text-blue-600" />
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <Users className="text-white h-6 w-6" />
+              </div>
+              <h1 className="text-xl font-black text-slate-900">
                 لوحة المشرف
               </h1>
             </div>
             <div className="flex items-center">
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
+                className="inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-xl text-slate-600 bg-white hover:bg-slate-50 hover:text-red-600 focus:outline-none transition-all duration-200 shadow-sm"
               >
                 <LogOut className="ml-2 h-4 w-4" />
                 تسجيل خروج
@@ -114,24 +116,24 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row justify-between items-center border-b border-gray-200">
+        <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden sm:rounded-[2.5rem]">
+          <div className="px-6 py-8 sm:px-10 flex flex-col sm:flex-row justify-between items-center border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
             <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+              <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600">
                 الطلبة المسجلين
               </h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              <p className="mt-1 max-w-2xl text-sm text-slate-500">
                 قائمة بجميع الطلبة الذين قاموا بتعبئة نموذج التسجيل.
               </p>
             </div>
             
-            <div className="mt-4 sm:mt-0 relative rounded-md shadow-sm w-full sm:w-64">
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <div className="mt-6 sm:mt-0 relative w-full sm:w-80">
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                className="focus:ring-blue-500 focus:border-blue-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
+                className="block w-full pr-11 py-3 border border-slate-200 rounded-2xl bg-white shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                 placeholder="بحث بالاسم..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -140,31 +142,31 @@ export default function AdminDashboard() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     نوع التقديم
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     الاسم الرباعي
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     الجنس
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     رقم الموبايل
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     تاريخ الميلاد
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     اسم الأم الثلاثي
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     عنوان السكن
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                     تاريخ التسجيل
                   </th>
                 </tr>
@@ -172,42 +174,47 @@ export default function AdminDashboard() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
-                      جاري التحميل...
+                    <td colSpan={8} className="px-6 py-20 whitespace-nowrap text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <Loader2 className="h-10 w-10 text-blue-600 animate-spin mb-3" />
+                        <span className="text-slate-500 font-medium">جاري التحميل...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                    <td colSpan={8} className="px-6 py-12 whitespace-nowrap text-center text-sm text-slate-400">
                       لا يوجد طلبة مسجلين
                     </td>
                   </tr>
                 ) : (
                   filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {student.application_type || '-'}
+                    <tr key={student.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">
+                        <span className="bg-blue-50 px-3 py-1 rounded-lg">{student.application_type || '-'}</span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
                         {student.first_name} {student.father_name} {student.grandfather_name} {student.great_grandfather_name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.gender === 'male' ? 'ذكر' : 'أنثى'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                        <span className={`px-2 py-1 rounded-md ${student.gender === 'male' ? 'bg-slate-100' : 'bg-pink-50 text-pink-600'}`}>
+                          {student.gender === 'male' ? 'ذكر' : 'أنثى'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600" dir="ltr">
                         {student.mobile_number}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600" dir="ltr">
                         {student.date_of_birth}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                         {student.mother_name} {student.mother_father_name} {student.mother_grandfather_name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                         {student.district} - {student.neighborhood}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">
-                        {new Date(student.created_at).toLocaleDateString('ar-EG')}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 group-hover:text-slate-600" dir="ltr">
+                        {new Date(student.created_at).toLocaleDateString('ar-IQ')}
                       </td>
                     </tr>
                   ))

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors } from 'lucide-react';
+import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2 } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
 import Cropper from 'react-easy-crop';
 import { Point, Area } from 'react-easy-crop/types';
@@ -367,30 +367,38 @@ export default function StudentDashboard() {
   }, [formData, photoFile, userId]);
 
   if (fetching) {
-    return <div className="min-h-screen flex items-center justify-center" dir="rtl">جاري التحميل...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-cairo" dir="rtl">
+        <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-slate-600 font-bold text-lg">جاري التحميل...</p>
+      </div>
+    );
   }
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-cairo" dir="rtl">
         {renderNoConfig()}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100" dir="rtl">
-      <nav className="bg-white shadow-sm">
+    <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
+      <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">لوحة الطالب</h1>
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <CheckCircle className="text-white h-5 w-5" />
+              </div>
+              <h1 className="text-xl font-bold text-slate-900">لوحة الطالب</h1>
             </div>
             <div className="flex items-center">
               <button
                 onClick={handleLogout}
                 type="button"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                className="inline-flex items-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-xl text-slate-600 bg-white hover:bg-slate-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-sm"
               >
                 <LogOut className="ml-2 h-4 w-4" />
                 تسجيل خروج
@@ -454,13 +462,13 @@ export default function StudentDashboard() {
       )}
 
       <div className="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg overflow-hidden sm:rounded-xl">
-          <div className="px-4 py-6 sm:px-8 border-b border-gray-200">
-            <h3 className="text-2xl font-extrabold text-gray-900">
+        <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden sm:rounded-[2rem]">
+          <div className="px-4 py-8 sm:px-10 border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
+            <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600">
               نموذج تسجيل الطلبة
             </h3>
-            <p className="mt-2 max-w-2xl text-base text-gray-600">
-              الرجاء تعبئة جميع البيانات المطلوبة بدقة.
+            <p className="mt-2 max-w-2xl text-base text-slate-500">
+              يرجى إدخال المعلومات الشخصية والدراسية بعناية لضمان دقة التسجيل.
             </p>
           </div>
           
@@ -483,12 +491,12 @@ export default function StudentDashboard() {
                 
                 {/* Application Type */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">نوع التقديم</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">نوع التقديم</h4>
                 </div>
                 
                 <div className="sm:col-span-2">
-                  <label htmlFor="application_type" className="block text-sm font-medium text-gray-800">نوع التقديم</label>
-                  <select id="application_type" name="application_type" required value={formData.application_type} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                  <label htmlFor="application_type" className="block text-sm font-semibold text-slate-700 mr-1">المرحلة الدراسية المراد التقديم إليها</label>
+                  <select id="application_type" name="application_type" required value={formData.application_type} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     {APPLICATION_TYPES.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -498,13 +506,13 @@ export default function StudentDashboard() {
 
                 {/* Photo Upload */}
                 <div className="sm:col-span-2">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">صورة الطالب/ة</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">صورة الطالب/ة</h4>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-800">الصورة الشخصية (JPG فقط، الحد الأقصى 500KB)</label>
+                  <label className="block text-sm font-semibold text-slate-700 mr-1">الصورة الشخصية الرسمية</label>
                   <div className="mt-1 flex items-center space-x-4 space-x-reverse">
-                    <div className="relative flex-shrink-0 h-40 w-32 border-2 border-dashed border-blue-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center transition-all hover:border-blue-400 group">
+                    <div className="relative flex-shrink-0 h-44 w-32 border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center transition-all hover:border-blue-400 hover:bg-blue-50 group">
                       {photoPreview ? (
                         <>
                           <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" loading="lazy" />
@@ -518,7 +526,7 @@ export default function StudentDashboard() {
                           </button>
                         </>
                       ) : (
-                        <Upload className="h-8 w-8 text-gray-400" />
+                        <Upload className="h-8 w-8 text-slate-300 group-hover:text-blue-400 transition-colors" />
                       )}
                     </div>
                     <div>
@@ -529,42 +537,42 @@ export default function StudentDashboard() {
                         accept=".jpg,.jpeg"
                         onChange={handlePhotoChange}
                         required={!formData.photo_url}
-                        className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors duration-200"
+                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200 cursor-pointer"
                       />
-                      <p className="mt-2 text-xs text-gray-500">
-                        يجب أن تكون الصورة واضحة وبخلفية بيضاء.
+                      <p className="mt-2 text-xs text-slate-400">
+                        الصيغة المطلوبة: JPG فقط. الحجم الأقصى: 500 كيلوبايت. يفضل خلفية بيضاء.
                       </p>
                     </div>
                   </div>
                 </div>
                 {/* Personal Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">البيانات الشخصية</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">البيانات الشخصية</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-800">الاسم الأول</label>
-                  <input type="text" name="first_name" id="first_name" required maxLength={100} value={formData.first_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="first_name" className="block text-sm font-semibold text-slate-700 mr-1">الاسم الأول</label>
+                  <input type="text" name="first_name" id="first_name" required maxLength={100} value={formData.first_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="father_name" className="block text-sm font-medium text-gray-800">اسم الأب</label>
-                  <input type="text" name="father_name" id="father_name" required maxLength={100} value={formData.father_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="father_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم الأب</label>
+                  <input type="text" name="father_name" id="father_name" required maxLength={100} value={formData.father_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="grandfather_name" className="block text-sm font-medium text-gray-800">اسم الجد</label>
-                  <input type="text" name="grandfather_name" id="grandfather_name" required maxLength={100} value={formData.grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="grandfather_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم الجد</label>
+                  <input type="text" name="grandfather_name" id="grandfather_name" required maxLength={100} value={formData.grandfather_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="great_grandfather_name" className="block text-sm font-medium text-gray-800">اسم والد الجد</label>
-                  <input type="text" name="great_grandfather_name" id="great_grandfather_name" required maxLength={100} value={formData.great_grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="great_grandfather_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم والد الجد</label>
+                  <input type="text" name="great_grandfather_name" id="great_grandfather_name" required maxLength={100} value={formData.great_grandfather_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-800">الجنس</label>
-                  <select id="gender" name="gender" required value={formData.gender} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="gender" className="block text-sm font-semibold text-slate-700 mr-1">الجنس</label>
+                  <select id="gender" name="gender" required value={formData.gender} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="male">ذكر</option>
                     <option value="female">أنثى</option>
@@ -572,18 +580,18 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-800">تاريخ الميلاد</label>
-                  <input type="date" name="date_of_birth" id="date_of_birth" required value={formData.date_of_birth} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="date_of_birth" className="block text-sm font-semibold text-slate-700 mr-1">تاريخ الميلاد</label>
+                  <input type="date" name="date_of_birth" id="date_of_birth" required value={formData.date_of_birth} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 {/* Additional Personal Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">معلومات شخصية إضافية</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات شخصية إضافية</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="place_of_birth" className="block text-sm font-medium text-gray-800">محل الولادة</label>
-                  <select id="place_of_birth" name="place_of_birth" required value={formData.place_of_birth} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="place_of_birth" className="block text-sm font-semibold text-slate-700 mr-1">محل الولادة</label>
+                  <select id="place_of_birth" name="place_of_birth" required value={formData.place_of_birth} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="بغداد">بغداد</option>
                     <option value="البصرة">البصرة</option>
@@ -607,8 +615,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="marital_status" className="block text-sm font-medium text-gray-800">الحالة الاجتماعية</label>
-                  <select id="marital_status" name="marital_status" required value={formData.marital_status} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="marital_status" className="block text-sm font-semibold text-slate-700 mr-1">الحالة الاجتماعية</label>
+                  <select id="marital_status" name="marital_status" required value={formData.marital_status} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="متزوج">متزوج</option>
                     <option value="باكر">باكر</option>
@@ -618,13 +626,13 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="mobile_number" className="block text-sm font-medium text-gray-800">رقم الموبايل</label>
-                  <input type="tel" name="mobile_number" id="mobile_number" pattern="^07[0-9]{9}$" title="يجب أن يبدأ بـ 07 ويتكون من 11 رقم" placeholder="07XXXXXXXXX" required value={formData.mobile_number} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" dir="ltr" />
+                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم الموبايل</label>
+                  <input type="tel" name="mobile_number" id="mobile_number" pattern="^07[0-9]{9}$" title="يجب أن يبدأ بـ 07 ويتكون من 11 رقم" placeholder="07XXXXXXXXX" required value={formData.mobile_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
                 </div>
 
                 <div>
-                  <label htmlFor="religion" className="block text-sm font-medium text-gray-800">الديانة</label>
-                  <select id="religion" name="religion" required value={formData.religion} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="religion" className="block text-sm font-semibold text-slate-700 mr-1">الديانة</label>
+                  <select id="religion" name="religion" required value={formData.religion} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="مسلم">مسلم</option>
                     <option value="مسيحي">مسيحي</option>
@@ -634,8 +642,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="ethnicity" className="block text-sm font-medium text-gray-800">القومية</label>
-                  <select id="ethnicity" name="ethnicity" required value={formData.ethnicity} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="ethnicity" className="block text-sm font-semibold text-slate-700 mr-1">القومية</label>
+                  <select id="ethnicity" name="ethnicity" required value={formData.ethnicity} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="عربي">عربي</option>
                     <option value="كردي">كردي</option>
@@ -645,8 +653,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="father_life_status" className="block text-sm font-medium text-gray-800">الحالة الحياتية للأب</label>
-                  <select id="father_life_status" name="father_life_status" required value={formData.father_life_status} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="father_life_status" className="block text-sm font-semibold text-slate-700 mr-1">الحالة الحياتية للأب</label>
+                  <select id="father_life_status" name="father_life_status" required value={formData.father_life_status} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="حي">حي</option>
                     <option value="متوفي">متوفي</option>
@@ -654,8 +662,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="is_gov_employee" className="block text-sm font-medium text-gray-800">موظف حكومي</label>
-                  <select id="is_gov_employee" name="is_gov_employee" required value={formData.is_gov_employee} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="is_gov_employee" className="block text-sm font-semibold text-slate-700 mr-1">هل أنت موظف حكومي؟</label>
+                  <select id="is_gov_employee" name="is_gov_employee" required value={formData.is_gov_employee} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="نعم">نعم</option>
                     <option value="لا">لا</option>
@@ -664,29 +672,29 @@ export default function StudentDashboard() {
 
                 {formData.is_gov_employee === 'نعم' && (
                   <div>
-                    <label htmlFor="gov_department" className="block text-sm font-medium text-gray-800">اسم الدائرة التي تعمل بها</label>
-                    <input type="text" name="gov_department" id="gov_department" required={formData.is_gov_employee === 'نعم'} maxLength={150} value={formData.gov_department} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                    <label htmlFor="gov_department" className="block text-sm font-semibold text-slate-700 mr-1">اسم الدائرة الحكومية</label>
+                    <input type="text" name="gov_department" id="gov_department" required={formData.is_gov_employee === 'نعم'} maxLength={150} value={formData.gov_department} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                   </div>
                 )}
 
                 {/* National ID Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">معلومات البطاقة الوطنية الموحدة</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات البطاقة الوطنية الموحدة</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_number" className="block text-sm font-medium text-gray-800">رقم البطاقة الموحدة</label>
-                  <input type="text" name="national_id_number" id="national_id_number" pattern="^[0-9]{12}$" title="يجب أن يتكون رقم البطاقة الموحدة من 12 رقماً" placeholder="123456789012" required value={formData.national_id_number} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" dir="ltr" />
+                  <label htmlFor="national_id_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم البطاقة الموحدة</label>
+                  <input type="text" name="national_id_number" id="national_id_number" pattern="^[0-9]{12}$" title="يجب أن يتكون رقم البطاقة الموحدة من 12 رقماً" placeholder="123456789012" required value={formData.national_id_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_date" className="block text-sm font-medium text-gray-800">تاريخ الإصدار</label>
-                  <input type="date" name="national_id_date" id="national_id_date" required value={formData.national_id_date} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="national_id_date" className="block text-sm font-semibold text-slate-700 mr-1">تاريخ الإصدار</label>
+                  <input type="date" name="national_id_date" id="national_id_date" required value={formData.national_id_date} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_issuer" className="block text-sm font-medium text-gray-800">جهة الإصدار</label>
-                  <select id="national_id_issuer" name="national_id_issuer" required value={formData.national_id_issuer} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="national_id_issuer" className="block text-sm font-semibold text-slate-700 mr-1">جهة الإصدار</label>
+                  <select id="national_id_issuer" name="national_id_issuer" required value={formData.national_id_issuer} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     {NATIONAL_ID_ISSUERS.map(issuer => (
                       <option key={issuer} value={issuer}>{issuer}</option>
@@ -696,22 +704,22 @@ export default function StudentDashboard() {
 
                 {/* Residence Card Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">معلومات بطاقة السكن</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات بطاقة السكن</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_number" className="block text-sm font-medium text-gray-800">رقم بطاقة السكن</label>
-                  <input type="text" name="residence_card_number" id="residence_card_number" required value={formData.residence_card_number} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" dir="ltr" />
+                  <label htmlFor="residence_card_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم بطاقة السكن</label>
+                  <input type="text" name="residence_card_number" id="residence_card_number" required value={formData.residence_card_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_date" className="block text-sm font-medium text-gray-800">تاريخ بطاقة السكن</label>
-                  <input type="date" name="residence_card_date" id="residence_card_date" required value={formData.residence_card_date} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="residence_card_date" className="block text-sm font-semibold text-slate-700 mr-1">تاريخ بطاقة السكن</label>
+                  <input type="date" name="residence_card_date" id="residence_card_date" required value={formData.residence_card_date} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_issuer" className="block text-sm font-medium text-gray-800">جهة الإصدار</label>
-                  <select id="residence_card_issuer" name="residence_card_issuer" required value={formData.residence_card_issuer} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="residence_card_issuer" className="block text-sm font-semibold text-slate-700 mr-1">جهة الإصدار</label>
+                  <select id="residence_card_issuer" name="residence_card_issuer" required value={formData.residence_card_issuer} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     {RESIDENCE_CARD_ISSUERS.map(issuer => (
                       <option key={issuer} value={issuer}>{issuer}</option>
@@ -721,32 +729,32 @@ export default function StudentDashboard() {
 
                 {/* Mother's Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">بيانات الأم</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">بيانات الأم</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="mother_name" className="block text-sm font-medium text-gray-800">اسم الأم</label>
-                  <input type="text" name="mother_name" id="mother_name" required value={formData.mother_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="mother_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم الأم</label>
+                  <input type="text" name="mother_name" id="mother_name" required value={formData.mother_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="mother_father_name" className="block text-sm font-medium text-gray-800">اسم والد الأم</label>
-                  <input type="text" name="mother_father_name" id="mother_father_name" required value={formData.mother_father_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="mother_father_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم والد الأم</label>
+                  <input type="text" name="mother_father_name" id="mother_father_name" required value={formData.mother_father_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="mother_grandfather_name" className="block text-sm font-medium text-gray-800">اسم جد الأم</label>
-                  <input type="text" name="mother_grandfather_name" id="mother_grandfather_name" required value={formData.mother_grandfather_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="mother_grandfather_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم جد الأم</label>
+                  <input type="text" name="mother_grandfather_name" id="mother_grandfather_name" required value={formData.mother_grandfather_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 {/* Address Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">عنوان السكن</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">عنوان السكن</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="district" className="block text-sm font-medium text-gray-800">القضاء</label>
-                  <select id="district" name="district" required value={formData.district} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="district" className="block text-sm font-semibold text-slate-700 mr-1">القضاء</label>
+                  <select id="district" name="district" required value={formData.district} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="النجف">النجف</option>
                     <option value="الكوفة">الكوفة</option>
@@ -756,8 +764,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="sub_district" className="block text-sm font-medium text-gray-800">الناحية</label>
-                  <select id="sub_district" name="sub_district" required value={formData.sub_district} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="sub_district" className="block text-sm font-semibold text-slate-700 mr-1">الناحية</label>
+                  <select id="sub_district" name="sub_district" required value={formData.sub_district} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     <option value="مركز النجف">مركز النجف</option>
                     <option value="الحيدرية">الحيدرية</option>
@@ -775,38 +783,38 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="neighborhood" className="block text-sm font-medium text-gray-800">اسم الحي</label>
-                  <input type="text" name="neighborhood" id="neighborhood" required value={formData.neighborhood} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="neighborhood" className="block text-sm font-semibold text-slate-700 mr-1">اسم الحي</label>
+                  <input type="text" name="neighborhood" id="neighborhood" required value={formData.neighborhood} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="mahalla" className="block text-sm font-medium text-gray-800">محلة</label>
-                  <input type="text" name="mahalla" id="mahalla" value={formData.mahalla} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="mahalla" className="block text-sm font-semibold text-slate-700 mr-1">محلة</label>
+                  <input type="text" name="mahalla" id="mahalla" value={formData.mahalla} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="alley" className="block text-sm font-medium text-gray-800">زقاق</label>
-                  <input type="text" name="alley" id="alley" value={formData.alley} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="alley" className="block text-sm font-semibold text-slate-700 mr-1">زقاق</label>
+                  <input type="text" name="alley" id="alley" value={formData.alley} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="house_number" className="block text-sm font-medium text-gray-800">دار</label>
-                  <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="house_number" className="block text-sm font-semibold text-slate-700 mr-1">دار</label>
+                  <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 {/* Previous Education Info */}
                 <div className="sm:col-span-2 mt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-3 mb-4">معلومات الدراسة السابقة</h4>
+                  <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 mb-4">معلومات الدراسة السابقة</h4>
                 </div>
 
                 <div>
-                  <label htmlFor="previous_school_name" className="block text-sm font-medium text-gray-800">اسم آخر مدرسة كان فيها الطالب</label>
-                  <input type="text" name="previous_school_name" id="previous_school_name" required value={formData.previous_school_name} onChange={handleChange} className="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-2 px-3 border transition-all duration-200" />
+                  <label htmlFor="previous_school_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم آخر مدرسة كان فيها الطالب</label>
+                  <input type="text" name="previous_school_name" id="previous_school_name" required value={formData.previous_school_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="education_directorate" className="block text-sm font-medium text-gray-800">المديرية العامة التابعة لها المدرسة</label>
-                  <select id="education_directorate" name="education_directorate" required value={formData.education_directorate} onChange={handleChange} className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200">
+                  <label htmlFor="education_directorate" className="block text-sm font-semibold text-slate-700 mr-1">المديرية العامة التابعة لها المدرسة</label>
+                  <select id="education_directorate" name="education_directorate" required value={formData.education_directorate} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
                     <option value="" disabled>اختر...</option>
                     {EDUCATION_DIRECTORATES.map(directorate => (
                       <option key={directorate} value={directorate}>{directorate}</option>
@@ -816,14 +824,19 @@ export default function StudentDashboard() {
 
               </div>
 
-              <div className="pt-5 border-t border-gray-200">
+              <div className="pt-8 mt-8 border-t border-slate-100">
                 <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="ml-3 inline-flex justify-center py-2.5 px-5 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
+                    className="ml-3 inline-flex justify-center py-3.5 px-8 border border-transparent shadow-lg shadow-blue-500/25 text-base font-bold rounded-2xl text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:hover:scale-100 transition-all duration-300"
                   >
-                    {loading ? 'جاري الحفظ...' : (
+                    {loading ? (
+                      <div className="flex items-center">
+                        <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                        جاري الحفظ...
+                      </div>
+                    ) : (
                       <>
                         <Save className="ml-2 h-5 w-5" />
                         حفظ البيانات
