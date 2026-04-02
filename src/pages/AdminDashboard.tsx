@@ -172,15 +172,25 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
       {/* Toast Notification Component */}
       {toast && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-4 space-x-4 space-x-reverse rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border bg-white/90 backdrop-blur-xl transition-all duration-500 animate-in fade-in slide-in-from-top-5 ${
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col min-w-[340px] max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${
           toast.type === 'success' 
-            ? 'border-green-100 text-green-600' 
-            : 'border-red-100 text-red-600'
+            ? 'bg-white/95 border-emerald-500/20 text-emerald-900' 
+            : 'bg-white/95 border-red-500/20 text-red-900'
         }`}>
-          <div className={`p-2.5 rounded-2xl ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-            {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+          <div className="flex items-center px-6 py-4 space-x-4 space-x-reverse">
+            <div className={`flex-shrink-0 p-2.5 rounded-2xl shadow-sm ${
+              toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-red-500 text-white shadow-red-200'
+            }`}>
+              {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-[15px] leading-tight leading-6">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast(null)} className="flex-shrink-0 p-1.5 hover:bg-slate-100 rounded-xl transition-all active:scale-90">
+              <X className="h-5 w-5 text-slate-400" />
+            </button>
           </div>
-          <p className="font-black text-lg ml-2">{toast.message}</p>
+          <div className={`h-1 animate-progress opacity-60 ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
         </div>
       )}
 

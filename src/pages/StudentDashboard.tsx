@@ -150,8 +150,8 @@ export default function StudentDashboard() {
     return Object.keys(errors).length === 0;
   };
 
-  const inputClass = (field: string) => `mt-2 block w-full py-3 px-4 border rounded-xl shadow-sm transition-all text-sm ${
-    formErrors[field] ? 'border-red-300 bg-red-50/50 ring-2 ring-red-500/10 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-200 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'
+  const inputClass = (field: string) => `mt-2 block w-full py-3 px-4 border rounded-xl shadow-sm transition-all duration-300 text-sm ${
+    formErrors[field] ? 'border-red-400 bg-red-50/50 ring-4 ring-red-500/10 focus:border-red-500 focus:ring-red-500/20 animate-shake' : 'border-slate-200 bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500'
   }`;
 
   const renderNoConfig = () => (
@@ -278,7 +278,12 @@ export default function StudentDashboard() {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  }, []);
+    
+    // تفاعلي: إزالة التنبيه الأحمر بمجرد بدء الطالب في إدخال البيانات
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: false }));
+    }
+  }, [formErrors]);
 
   const handlePhotoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -322,6 +327,9 @@ export default function StudentDashboard() {
         setPhotoPreview(URL.createObjectURL(croppedBlob));
         setShowCropper(false);
         setTempImage(null);
+        
+        // إزالة خطأ الصورة التفاعلي
+        setFormErrors(prev => ({ ...prev, photo: false }));
       }
     } catch (e) {
       console.error(e);
@@ -428,15 +436,25 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
       {/* Toast Notification Component */}
       {toast && (
-        <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-4 space-x-4 space-x-reverse rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border bg-white/90 backdrop-blur-xl transition-all duration-500 animate-in fade-in slide-in-from-top-5 ${
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col min-w-[340px] max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${
           toast.type === 'success' 
-            ? 'border-green-100 text-green-600' 
-            : 'border-red-100 text-red-600'
+            ? 'bg-white/95 border-emerald-500/20 text-emerald-900' 
+            : 'bg-white/95 border-red-500/20 text-red-900'
         }`}>
-          <div className={`p-2.5 rounded-2xl ${toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-            {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+          <div className="flex items-center px-6 py-4 space-x-4 space-x-reverse">
+            <div className={`flex-shrink-0 p-2.5 rounded-2xl shadow-sm ${
+              toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-red-500 text-white shadow-red-200'
+            }`}>
+              {toast.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-[15px] leading-tight leading-6">{toast.message}</p>
+            </div>
+            <button onClick={() => setToast(null)} className="flex-shrink-0 p-1.5 hover:bg-slate-100 rounded-xl transition-all active:scale-90">
+              <X className="h-5 w-5 text-slate-400" />
+            </button>
           </div>
-          <p className="font-black text-lg ml-2">{toast.message}</p>
+          <div className={`h-1 animate-progress opacity-60 ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
         </div>
       )}
 
@@ -572,34 +590,34 @@ export default function StudentDashboard() {
                   <label className="block text-sm font-black text-slate-700 mb-1 mr-1">
                     الصورة الشخصية الرسمية <span className="text-red-500 mr-1">*</span>
                   </label>
-                  <div className="mt-1 flex items-center space-x-4 space-x-reverse">
-                    <div className={`relative flex-shrink-0 h-44 w-32 border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-300 bg-red-50/30' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50'}`}>
+                  <div className="mt-2 flex flex-col items-start gap-4">
+                    <label 
+                      htmlFor="photo" 
+                      className={`relative flex-shrink-0 h-44 w-32 cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-400 bg-red-50/30 ring-4 ring-red-500/5' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10'}`}
+                    >
                       {photoPreview ? (
                         <>
                           <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" loading="lazy" />
-                          <button
-                            type="button"
-                            onClick={removePhoto}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
-                            title="حذف الصورة"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
                         </>
                       ) : (
-                        <Upload className="h-8 w-8 text-slate-300 group-hover:text-blue-400 transition-colors" />
+                        <div className="flex flex-col items-center gap-2">
+                          <Upload className="h-8 w-8 text-slate-300 group-hover:text-blue-400 group-hover:scale-110 transition-all" />
+                          <span className="text-[10px] font-black text-slate-400 group-hover:text-blue-500">اضغط للرفع</span>
+                        </div>
                       )}
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        id="photo"
-                        name="photo"
-                        accept=".jpg,.jpeg"
-                        onChange={handlePhotoChange}
-                        className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all duration-200 cursor-pointer"
-                      />
-                      <p className="mt-2 text-xs text-slate-400">
+                    </label>
+
+                    <input
+                      type="file"
+                      id="photo"
+                      name="photo"
+                      accept=".jpg,.jpeg"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+
+                    <div className="space-y-1">
+                      <p className="text-xs text-slate-400 leading-relaxed">
                         الصيغة المطلوبة: JPG فقط. الحجم الأقصى: 500 كيلوبايت. يفضل خلفية بيضاء.
                       </p>
                       {formErrors.photo && <p className="mt-1.5 text-[10px] font-bold text-red-500 flex items-center animate-in slide-in-from-right-1"><AlertTriangle className="w-3 h-3 ml-1" /> يرجى رفع صورة الطالب</p>}
@@ -657,8 +675,8 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="place_of_birth" className="block text-sm font-semibold text-slate-700 mr-1">محل الولادة</label>
-                  <select id="place_of_birth" name="place_of_birth" required value={formData.place_of_birth} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="place_of_birth" className="block text-sm font-black text-slate-700 mb-1 mr-1">محل الولادة <span className="text-red-500 mr-1">*</span></label>
+                  <select id="place_of_birth" name="place_of_birth" value={formData.place_of_birth} onChange={handleChange} className={inputClass('place_of_birth')}>
                     <option value="" disabled>اختر...</option>
                     <option value="بغداد">بغداد</option>
                     <option value="البصرة">البصرة</option>
@@ -679,68 +697,76 @@ export default function StudentDashboard() {
                     <option value="السليمانية">السليمانية</option>
                     <option value="دهوك">دهوك</option>
                   </select>
+                  {formErrors.place_of_birth && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="marital_status" className="block text-sm font-semibold text-slate-700 mr-1">الحالة الاجتماعية</label>
-                  <select id="marital_status" name="marital_status" required value={formData.marital_status} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="marital_status" className="block text-sm font-black text-slate-700 mb-1 mr-1">الحالة الاجتماعية <span className="text-red-500 mr-1">*</span></label>
+                  <select id="marital_status" name="marital_status" value={formData.marital_status} onChange={handleChange} className={inputClass('marital_status')}>
                     <option value="" disabled>اختر...</option>
                     <option value="متزوج">متزوج</option>
                     <option value="باكر">باكر</option>
                     <option value="مطلق">مطلق</option>
                     <option value="ارمل">ارمل</option>
                   </select>
+                  {formErrors.marital_status && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="mobile_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم الموبايل</label>
-                  <input type="tel" name="mobile_number" id="mobile_number" pattern="^07[0-9]{9}$" title="يجب أن يبدأ بـ 07 ويتكون من 11 رقم" placeholder="07XXXXXXXXX" required value={formData.mobile_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
+                  <label htmlFor="mobile_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم الموبايل <span className="text-red-500 mr-1">*</span></label>
+                  <input type="tel" name="mobile_number" id="mobile_number" pattern="^07[0-9]{9}$" title="يجب أن يبدأ بـ 07 ويتكون من 11 رقم" placeholder="07XXXXXXXXX" value={formData.mobile_number} onChange={handleChange} className={inputClass('mobile_number')} dir="ltr" />
+                  {formErrors.mobile_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="religion" className="block text-sm font-semibold text-slate-700 mr-1">الديانة</label>
-                  <select id="religion" name="religion" required value={formData.religion} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="religion" className="block text-sm font-black text-slate-700 mb-1 mr-1">الديانة <span className="text-red-500 mr-1">*</span></label>
+                  <select id="religion" name="religion" value={formData.religion} onChange={handleChange} className={inputClass('religion')}>
                     <option value="" disabled>اختر...</option>
                     <option value="مسلم">مسلم</option>
                     <option value="مسيحي">مسيحي</option>
                     <option value="صابئي">صابئي</option>
                     <option value="ايزيدي">ايزيدي</option>
                   </select>
+                  {formErrors.religion && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="ethnicity" className="block text-sm font-semibold text-slate-700 mr-1">القومية</label>
-                  <select id="ethnicity" name="ethnicity" required value={formData.ethnicity} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="ethnicity" className="block text-sm font-black text-slate-700 mb-1 mr-1">القومية <span className="text-red-500 mr-1">*</span></label>
+                  <select id="ethnicity" name="ethnicity" value={formData.ethnicity} onChange={handleChange} className={inputClass('ethnicity')}>
                     <option value="" disabled>اختر...</option>
                     <option value="عربي">عربي</option>
                     <option value="كردي">كردي</option>
                     <option value="تركماني">تركماني</option>
                     <option value="أخرى">أخرى</option>
                   </select>
+                  {formErrors.ethnicity && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="father_life_status" className="block text-sm font-semibold text-slate-700 mr-1">الحالة الحياتية للأب</label>
-                  <select id="father_life_status" name="father_life_status" required value={formData.father_life_status} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="father_life_status" className="block text-sm font-black text-slate-700 mb-1 mr-1">الحالة الحياتية للأب <span className="text-red-500 mr-1">*</span></label>
+                  <select id="father_life_status" name="father_life_status" value={formData.father_life_status} onChange={handleChange} className={inputClass('father_life_status')}>
                     <option value="" disabled>اختر...</option>
                     <option value="حي">حي</option>
                     <option value="متوفي">متوفي</option>
                   </select>
+                  {formErrors.father_life_status && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="is_gov_employee" className="block text-sm font-semibold text-slate-700 mr-1">هل أنت موظف حكومي؟</label>
-                  <select id="is_gov_employee" name="is_gov_employee" required value={formData.is_gov_employee} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="is_gov_employee" className="block text-sm font-black text-slate-700 mb-1 mr-1">هل أنت موظف حكومي؟ <span className="text-red-500 mr-1">*</span></label>
+                  <select id="is_gov_employee" name="is_gov_employee" value={formData.is_gov_employee} onChange={handleChange} className={inputClass('is_gov_employee')}>
                     <option value="" disabled>اختر...</option>
                     <option value="نعم">نعم</option>
                     <option value="لا">لا</option>
                   </select>
+                  {formErrors.is_gov_employee && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 {formData.is_gov_employee === 'نعم' && (
                   <div>
-                    <label htmlFor="gov_department" className="block text-sm font-semibold text-slate-700 mr-1">اسم الدائرة الحكومية</label>
-                    <input type="text" name="gov_department" id="gov_department" required={formData.is_gov_employee === 'نعم'} maxLength={150} value={formData.gov_department} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                    <label htmlFor="gov_department" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الدائرة الحكومية <span className="text-red-500 mr-1">*</span></label>
+                    <input type="text" name="gov_department" id="gov_department" maxLength={150} value={formData.gov_department} onChange={handleChange} className={inputClass('gov_department')} />
+                    {formErrors.gov_department && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                   </div>
                 )}
 
@@ -750,23 +776,26 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم البطاقة الموحدة</label>
-                  <input type="text" name="national_id_number" id="national_id_number" pattern="^[0-9]{12}$" title="يجب أن يتكون رقم البطاقة الموحدة من 12 رقماً" placeholder="123456789012" required value={formData.national_id_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
+                  <label htmlFor="national_id_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم البطاقة الموحدة <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="national_id_number" id="national_id_number" pattern="^[0-9]{12}$" title="يجب أن يتكون رقم البطاقة الموحدة من 12 رقماً" placeholder="123456789012" value={formData.national_id_number} onChange={handleChange} className={inputClass('national_id_number')} dir="ltr" />
+                  {formErrors.national_id_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_date" className="block text-sm font-semibold text-slate-700 mr-1">تاريخ الإصدار</label>
-                  <input type="date" name="national_id_date" id="national_id_date" required value={formData.national_id_date} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="national_id_date" className="block text-sm font-black text-slate-700 mb-1 mr-1">تاريخ الإصدار <span className="text-red-500 mr-1">*</span></label>
+                  <input type="date" name="national_id_date" id="national_id_date" value={formData.national_id_date} onChange={handleChange} className={inputClass('national_id_date')} />
+                  {formErrors.national_id_date && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="national_id_issuer" className="block text-sm font-semibold text-slate-700 mr-1">جهة الإصدار</label>
-                  <select id="national_id_issuer" name="national_id_issuer" required value={formData.national_id_issuer} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="national_id_issuer" className="block text-sm font-black text-slate-700 mb-1 mr-1">جهة الإصدار <span className="text-red-500 mr-1">*</span></label>
+                  <select id="national_id_issuer" name="national_id_issuer" value={formData.national_id_issuer} onChange={handleChange} className={inputClass('national_id_issuer')}>
                     <option value="" disabled>اختر...</option>
                     {NATIONAL_ID_ISSUERS.map(issuer => (
                       <option key={issuer} value={issuer}>{issuer}</option>
                     ))}
                   </select>
+                  {formErrors.national_id_issuer && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 {/* Residence Card Info */}
@@ -775,23 +804,26 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_number" className="block text-sm font-semibold text-slate-700 mr-1">رقم بطاقة السكن</label>
-                  <input type="text" name="residence_card_number" id="residence_card_number" required value={formData.residence_card_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" dir="ltr" />
+                  <label htmlFor="residence_card_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم بطاقة السكن <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="residence_card_number" id="residence_card_number" value={formData.residence_card_number} onChange={handleChange} className={inputClass('residence_card_number')} dir="ltr" />
+                  {formErrors.residence_card_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_date" className="block text-sm font-semibold text-slate-700 mr-1">تاريخ بطاقة السكن</label>
-                  <input type="date" name="residence_card_date" id="residence_card_date" required value={formData.residence_card_date} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="residence_card_date" className="block text-sm font-black text-slate-700 mb-1 mr-1">تاريخ بطاقة السكن <span className="text-red-500 mr-1">*</span></label>
+                  <input type="date" name="residence_card_date" id="residence_card_date" value={formData.residence_card_date} onChange={handleChange} className={inputClass('residence_card_date')} />
+                  {formErrors.residence_card_date && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="residence_card_issuer" className="block text-sm font-semibold text-slate-700 mr-1">جهة الإصدار</label>
-                  <select id="residence_card_issuer" name="residence_card_issuer" required value={formData.residence_card_issuer} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="residence_card_issuer" className="block text-sm font-black text-slate-700 mb-1 mr-1">جهة الإصدار <span className="text-red-500 mr-1">*</span></label>
+                  <select id="residence_card_issuer" name="residence_card_issuer" value={formData.residence_card_issuer} onChange={handleChange} className={inputClass('residence_card_issuer')}>
                     <option value="" disabled>اختر...</option>
                     {RESIDENCE_CARD_ISSUERS.map(issuer => (
                       <option key={issuer} value={issuer}>{issuer}</option>
                     ))}
                   </select>
+                  {formErrors.residence_card_issuer && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 {/* Mother's Info */}
@@ -800,18 +832,21 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="mother_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم الأم</label>
-                  <input type="text" name="mother_name" id="mother_name" required value={formData.mother_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="mother_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الأم <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="mother_name" id="mother_name" value={formData.mother_name} onChange={handleChange} className={inputClass('mother_name')} />
+                  {formErrors.mother_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="mother_father_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم والد الأم</label>
-                  <input type="text" name="mother_father_name" id="mother_father_name" required value={formData.mother_father_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="mother_father_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم والد الأم <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="mother_father_name" id="mother_father_name" value={formData.mother_father_name} onChange={handleChange} className={inputClass('mother_father_name')} />
+                  {formErrors.mother_father_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="mother_grandfather_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم جد الأم</label>
-                  <input type="text" name="mother_grandfather_name" id="mother_grandfather_name" required value={formData.mother_grandfather_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="mother_grandfather_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم جد الأم <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="mother_grandfather_name" id="mother_grandfather_name" value={formData.mother_grandfather_name} onChange={handleChange} className={inputClass('mother_grandfather_name')} />
+                  {formErrors.mother_grandfather_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 {/* Address Info */}
@@ -820,19 +855,20 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="district" className="block text-sm font-semibold text-slate-700 mr-1">القضاء</label>
-                  <select id="district" name="district" required value={formData.district} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="district" className="block text-sm font-black text-slate-700 mb-1 mr-1">القضاء <span className="text-red-500 mr-1">*</span></label>
+                  <select id="district" name="district" value={formData.district} onChange={handleChange} className={inputClass('district')}>
                     <option value="" disabled>اختر...</option>
                     <option value="النجف">النجف</option>
                     <option value="الكوفة">الكوفة</option>
                     <option value="المناذرة">المناذرة</option>
                     <option value="المشخاب">المشخاب</option>
                   </select>
+                  {formErrors.district && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="sub_district" className="block text-sm font-semibold text-slate-700 mr-1">الناحية</label>
-                  <select id="sub_district" name="sub_district" required value={formData.sub_district} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="sub_district" className="block text-sm font-black text-slate-700 mb-1 mr-1">الناحية <span className="text-red-500 mr-1">*</span></label>
+                  <select id="sub_district" name="sub_district" value={formData.sub_district} onChange={handleChange} className={inputClass('sub_district')}>
                     <option value="" disabled>اختر...</option>
                     <option value="مركز النجف">مركز النجف</option>
                     <option value="الحيدرية">الحيدرية</option>
@@ -847,25 +883,27 @@ export default function StudentDashboard() {
                     <option value="مركز المشخاب">مركز المشخاب</option>
                     <option value="القادسية">القادسية</option>
                   </select>
+                  {formErrors.sub_district && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="neighborhood" className="block text-sm font-semibold text-slate-700 mr-1">اسم الحي</label>
-                  <input type="text" name="neighborhood" id="neighborhood" required value={formData.neighborhood} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="neighborhood" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الحي <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="neighborhood" id="neighborhood" value={formData.neighborhood} onChange={handleChange} className={inputClass('neighborhood')} />
+                  {formErrors.neighborhood && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="mahalla" className="block text-sm font-semibold text-slate-700 mr-1">محلة</label>
+                  <label htmlFor="mahalla" className="block text-sm font-black text-slate-700 mb-1 mr-1">محلة</label>
                   <input type="text" name="mahalla" id="mahalla" value={formData.mahalla} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="alley" className="block text-sm font-semibold text-slate-700 mr-1">زقاق</label>
+                  <label htmlFor="alley" className="block text-sm font-black text-slate-700 mb-1 mr-1">زقاق</label>
                   <input type="text" name="alley" id="alley" value={formData.alley} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
                 <div>
-                  <label htmlFor="house_number" className="block text-sm font-semibold text-slate-700 mr-1">دار</label>
+                  <label htmlFor="house_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">دار</label>
                   <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
                 </div>
 
@@ -875,18 +913,20 @@ export default function StudentDashboard() {
                 </div>
 
                 <div>
-                  <label htmlFor="previous_school_name" className="block text-sm font-semibold text-slate-700 mr-1">اسم آخر مدرسة كان فيها الطالب</label>
-                  <input type="text" name="previous_school_name" id="previous_school_name" required value={formData.previous_school_name} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <label htmlFor="previous_school_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم آخر مدرسة كان فيها الطالب <span className="text-red-500 mr-1">*</span></label>
+                  <input type="text" name="previous_school_name" id="previous_school_name" value={formData.previous_school_name} onChange={handleChange} className={inputClass('previous_school_name')} />
+                  {formErrors.previous_school_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="education_directorate" className="block text-sm font-semibold text-slate-700 mr-1">المديرية العامة التابعة لها المدرسة</label>
-                  <select id="education_directorate" name="education_directorate" required value={formData.education_directorate} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                  <label htmlFor="education_directorate" className="block text-sm font-black text-slate-700 mb-1 mr-1">المديرية العامة التابعة لها المدرسة <span className="text-red-500 mr-1">*</span></label>
+                  <select id="education_directorate" name="education_directorate" value={formData.education_directorate} onChange={handleChange} className={inputClass('education_directorate')}>
                     <option value="" disabled>اختر...</option>
                     {EDUCATION_DIRECTORATES.map(directorate => (
                       <option key={directorate} value={directorate}>{directorate}</option>
                     ))}
                   </select>
+                  {formErrors.education_directorate && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
               </div>
