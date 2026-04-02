@@ -416,12 +416,36 @@ export default function StudentDashboard() {
                 crop={crop}
                 zoom={zoom}
                 aspect={3.5 / 4.5}
+                showGrid={true}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
               />
+              {/* دليل إضافي لمساعدة الطالب على موازنة الأعين والأنف في المنتصف */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-full h-[1px] bg-yellow-400/60 shadow-[0_0_1px_black]"></div>
+                <div className="absolute w-[1px] h-full bg-yellow-400/60 shadow-[0_0_1px_black]"></div>
+                <div className="absolute w-20 h-28 border-2 border-yellow-400/50 shadow-[0_0_2px_black] rounded-[50%]"></div>
+              </div>
             </div>
-            <div className="p-4 flex justify-end space-x-3 space-x-reverse">
+
+            {/* شريط التحكم في التكبير (Zoom Slider) */}
+            <div className="px-6 py-4 border-t bg-gray-50">
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <span className="text-sm font-medium text-gray-700 w-16">التكبير:</span>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 flex justify-end border-t space-x-3 space-x-reverse">
               <button onClick={handleCropCancel} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">إلغاء</button>
               <button onClick={handleCropSave} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">اعتماد الصورة</button>
             </div>
