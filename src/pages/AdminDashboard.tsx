@@ -306,6 +306,37 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
+      {/* تنسيق خاص لضمان ظهور الصور والألوان عند الطباعة */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          nav, button, .no-print { display: none !important; }
+          
+          /* معالجة ظهور Modal التعديل/التفاصيل عند الطباعة */
+          .fixed.inset-0 {
+            position: static !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          .bg-white.rounded-[2rem] {
+            border: none !important;
+            box-shadow: none !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          .overflow-y-auto {
+            overflow: visible !important;
+            max-height: none !important;
+          }
+          img { 
+            display: block !important;
+            max-width: 200px !important; /* حجم مناسب للصورة الشخصية في الطباعة */
+          }
+        }
+      ` }} />
       {/* Toast Notification Component */}
       {toast && (
         <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col min-w-[340px] max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${

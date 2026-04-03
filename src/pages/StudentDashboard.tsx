@@ -445,6 +445,25 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
+      {/* تنسيق خاص لضمان ظهور الصور والألوان عند الطباعة */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .no-print { display: none !important; }
+          img { 
+            display: block !important; 
+            max-width: 100% !important;
+          }
+          /* إزالة الظلال والحدود المتقطعة التي قد تحجب الصورة في الطباعة */
+          label[for="photo"], .shadow-inner {
+            box-shadow: none !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+        }
+      ` }} />
       {/* Toast Notification Component */}
 {toast && (
         <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col w-full max-w-sm sm:min-w-[340px] sm:max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${
@@ -599,7 +618,7 @@ export default function StudentDashboard() {
                     >
                       {photoPreview ? (
                         <>
-                          <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" loading="lazy" />
+                          <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" />
                         </>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
