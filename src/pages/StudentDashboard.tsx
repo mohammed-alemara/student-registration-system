@@ -4,53 +4,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
-<<<<<<< HEAD
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
-=======
-import Cropper from 'react-easy-crop';
-import { Point, Area } from 'react-easy-crop/types';
-
-// دالة مساعدة لإنشاء صورة من رابط
-const createImage = (url: string): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
-    image.src = url;
-  });
-
-// دالة معالجة قص الصورة وتحويلها إلى Blob
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) throw new Error('No 2d context');
-
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
-  );
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-    }, 'image/jpeg');
-  });
-};
->>>>>>> parent of d96390a (Cleanup commits)
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -314,19 +269,8 @@ export default function StudentDashboard() {
   }, []);
 
   const handleCropSave = async () => {
-<<<<<<< HEAD
     const cropper = cropperRef.current?.cropper;
     if (!cropper) return;
-=======
-    try {
-      if (tempImage && croppedAreaPixels) {
-        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
-        const croppedFile = new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' });
-        
-        if (photoPreview && photoPreview.startsWith('blob:')) {
-          URL.revokeObjectURL(photoPreview);
-        }
->>>>>>> parent of d96390a (Cleanup commits)
 
     try {
       const canvas = cropper.getCroppedCanvas({
@@ -450,12 +394,13 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 font-cairo" dir="rtl">
       {/* Toast Notification Component */}
-      {toast && (
-        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col min-w-[340px] max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${
+{toast && (
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col w-full max-w-sm sm:min-w-[340px] sm:max-w-md overflow-hidden rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] border backdrop-blur-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-8 ${
           toast.type === 'success' 
             ? 'bg-white/95 border-emerald-500/20 text-emerald-900' 
             : 'bg-white/95 border-red-500/20 text-red-900'
         }`}>
+
           <div className="flex items-center px-6 py-4 space-x-4 space-x-reverse">
             <div className={`flex-shrink-0 p-2.5 rounded-2xl shadow-sm ${
               toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-red-500 text-white shadow-red-200'
@@ -509,7 +454,7 @@ export default function StudentDashboard() {
                 src={tempImage}
                 style={{ height: 400, width: "100%" }}
                 initialAspectRatio={3.5 / 4.5}
-                aspect={3.5 / 4.5}
+                aspectRatio={3.5 / 4.5}
                 guides={true}
                 ref={cropperRef}
                 viewMode={1}
