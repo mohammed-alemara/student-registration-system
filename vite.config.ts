@@ -7,11 +7,6 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
     plugins: [react(), tailwindcss()],
-    build: {
-      rollupOptions: {
-        external: ['cropperjs/dist/cropper.css']
-      }
-    },
 
     base: './',
     define: {

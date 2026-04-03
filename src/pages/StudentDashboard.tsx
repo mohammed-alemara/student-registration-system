@@ -4,8 +4,53 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
-import Cropper from 'react-cropper';
-import 'cropperjs/dist/cropper.css';
+import Cropper, { Area, Point } from 'react-easy-crop';
+
+// الثوابت الخاصة بقياس الصورة المطلوب (3.5 * 4.5)
+const OUTPUT_WIDTH = 350; // عرض الصورة بالبكسل (يعادل 3.5 سم)
+const OUTPUT_HEIGHT = 450; // طول الصورة بالبكسل (يعادل 4.5 سم)
+const ASPECT_RATIO = 3.5 / 4.5;
+
+// دالة مساعدة لإنشاء صورة من رابط
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+// دالة معالجة قص الصورة وتحويلها إلى Blob
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) throw new Error('No 2d context');
+
+  // تحديد القياس النهائي للصورة للحفاظ على نسبة 3.5*4.5 بدقة عالية عند الحفظ
+  canvas.width = OUTPUT_WIDTH;
+  canvas.height = OUTPUT_HEIGHT;
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    OUTPUT_WIDTH,
+    OUTPUT_HEIGHT
+  );
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+    }, 'image/jpeg', 0.9);
+  });
+};
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -22,7 +67,9 @@ export default function StudentDashboard() {
   // حالات أداة القص
   const [tempImage, setTempImage] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
-  const cropperRef = useRef<any>(null);
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -268,28 +315,25 @@ export default function StudentDashboard() {
     setShowCropper(true);
   }, []);
 
+  const onCropComplete = useCallback((_area: Area, pixels: Area) => {
+    setCroppedAreaPixels(pixels);
+  }, []);
+
   const handleCropSave = async () => {
-    const cropper = cropperRef.current?.cropper;
-    if (!cropper) return;
-
     try {
-      const canvas = cropper.getCroppedCanvas({
-        width: 350,
-        height: 450,
-        imageSmoothingQuality: 'high',
-      });
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
-          
-          setPhotoFile(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
-          setPhotoPreview(URL.createObjectURL(blob));
-          setShowCropper(false);
-          setTempImage(null);
-          setFormErrors(prev => ({ ...prev, photo: false }));
+      if (tempImage && croppedAreaPixels) {
+        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+        
+        if (photoPreview && photoPreview.startsWith('blob:')) {
+          URL.revokeObjectURL(photoPreview);
         }
-      }, 'image/jpeg', 0.9);
+        
+        setPhotoFile(new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' }));
+        setPhotoPreview(URL.createObjectURL(croppedBlob));
+        setShowCropper(false);
+        setTempImage(null);
+        setFormErrors(prev => ({ ...prev, photo: false }));
+      }
     } catch (e) {
       console.error(e);
       setError('حدث خطأ أثناء معالجة الصورة');
@@ -449,25 +493,35 @@ export default function StudentDashboard() {
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[350px]">
+            <div className="relative flex-1 w-full mx-auto bg-gray-900 min-h-[400px]">
               <Cropper
-                src={tempImage}
-                style={{ height: 400, width: "100%" }}
-                initialAspectRatio={3.5 / 4.5}
-                aspectRatio={3.5 / 4.5}
-                guides={true}
-                ref={cropperRef}
-                viewMode={1}
-                dragMode="move"
-                background={false}
-                responsive={true}
-                checkOrientation={false}
+                image={tempImage}
+                crop={crop}
+                zoom={zoom}
+                aspectRatio={ASPECT_RATIO}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
               />
             </div>
-
-            <div className="p-4 flex justify-end border-t space-x-3 space-x-reverse">
+            <div className="p-4 bg-white border-t space-y-4">
+              <div className="flex items-center space-x-4 space-x-reverse px-2">
+                <span className="text-xs font-bold text-slate-500">الزوم</span>
+                <input
+                  type="range"
+                  value={zoom}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+              <div className="flex justify-end space-x-3 space-x-reverse">
               <button onClick={handleCropCancel} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">إلغاء</button>
               <button onClick={handleCropSave} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">اعتماد الصورة</button>
+            </div>
             </div>
           </div>
         </div>
@@ -554,7 +608,7 @@ export default function StudentDashboard() {
                       </h5>
                       <ul className="space-y-3 text-[14px] text-slate-600 leading-normal">
                         <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>يجب أن تكون ملونة وصيغتها <span className="font-bold text-slate-900">JPG</span> بحجم لا يتجاوز <span className="font-bold text-red-600 whitespace-nowrap" dir="ltr">500 KB</span>.</span></li>
-                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>أبعاد عمودية <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">(400x600)</span> بكسل كحد أدنى مع تغطية الوجه لـ <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">70% - 80%</span> من المساحة.</span></li>
+                        <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>أبعاد عمودية <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">(350x450)</span> بكسل مع تغطية الوجه لـ <span className="font-bold text-slate-900 whitespace-nowrap" dir="ltr">70% - 80%</span> من المساحة.</span></li>
                         <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>التقطت خلال آخر <span className="font-bold text-slate-900">6 أشهر</span> وبخلفية بيضاء ساطعة ومتناسقة.</span></li>
                         <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>الوجه باتجاه الكاميرا مباشرة، العينان مفتوحتان، وبدون تعبيرات خاصة.</span></li>
                         <li className="flex items-start"><span className="ml-2 text-blue-500 flex-shrink-0 mt-1.5">•</span> <span>الالتزام بالملابس اليومية العادية (تجنب الزي العسكري، الديني، أو التقليدي).</span></li>
