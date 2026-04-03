@@ -4,8 +4,53 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
+<<<<<<< HEAD
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
+=======
+import Cropper from 'react-easy-crop';
+import { Point, Area } from 'react-easy-crop/types';
+
+// دالة مساعدة لإنشاء صورة من رابط
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+// دالة معالجة قص الصورة وتحويلها إلى Blob
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) throw new Error('No 2d context');
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+    }, 'image/jpeg');
+  });
+};
+>>>>>>> parent of d96390a (Cleanup commits)
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -269,8 +314,19 @@ export default function StudentDashboard() {
   }, []);
 
   const handleCropSave = async () => {
+<<<<<<< HEAD
     const cropper = cropperRef.current?.cropper;
     if (!cropper) return;
+=======
+    try {
+      if (tempImage && croppedAreaPixels) {
+        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+        const croppedFile = new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' });
+        
+        if (photoPreview && photoPreview.startsWith('blob:')) {
+          URL.revokeObjectURL(photoPreview);
+        }
+>>>>>>> parent of d96390a (Cleanup commits)
 
     try {
       const canvas = cropper.getCroppedCanvas({
