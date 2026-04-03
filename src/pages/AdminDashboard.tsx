@@ -17,7 +17,8 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+    // منع تعيين crossOrigin للروابط المحلية لضمان ظهور الصورة في آيفون
+    if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
       image.setAttribute('crossOrigin', 'anonymous');
     }
     image.src = url;
@@ -243,12 +244,15 @@ export default function AdminDashboard() {
       return;
     }
 
+    // تنظيف الذاكرة قبل إنشاء رابط جديد
+    if (tempImage && tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
+
     const imageUrl = URL.createObjectURL(file);
     setTempImage(imageUrl);
     setShowCropper(true);
-  }, []);
+  }, [tempImage]);
 
-  const onCropComplete = useCallback((_area: Area, pixels: Area) => {
+  const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
   }, []);
 
@@ -256,14 +260,26 @@ export default function AdminDashboard() {
     try {
       if (tempImage && croppedAreaPixels) {
         const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+        
+        if (photoPreview && photoPreview.startsWith('blob:')) {
+          URL.revokeObjectURL(photoPreview);
+        }
+
         setPhotoFile(new File([croppedBlob], 'student_photo.jpg', { type: 'image/jpeg' }));
         setPhotoPreview(URL.createObjectURL(croppedBlob));
         setShowCropper(false);
+        if (tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
         setTempImage(null);
       }
     } catch (e) {
       showToast('خطأ في معالجة الصورة', 'error');
     }
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    if (tempImage && tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
+    setTempImage(null);
   };
 
   const filteredStudents = students.filter(student => 
@@ -508,11 +524,12 @@ export default function AdminDashboard() {
             </div>
             <div className="relative flex-1 w-full mx-auto bg-gray-900 min-h-[400px]">
               <Cropper
-                key={tempImage}
+                key={tempImage || 'no-image'}
                 image={tempImage}
                 crop={crop}
                 zoom={zoom}
                 aspect={ASPECT}
+                objectFit="contain"
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
@@ -532,7 +549,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="flex justify-end space-x-3 space-x-reverse">
-              <button onClick={() => { setShowCropper(false); setTempImage(null); }} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-all">إلغاء</button>
+              <button onClick={handleCropCancel} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-all">إلغاء</button>
               <button onClick={handleCropSave} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">حفظ الصورة</button>
             </div>
             </div>

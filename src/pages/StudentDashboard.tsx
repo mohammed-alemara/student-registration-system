@@ -17,7 +17,8 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+    // لا تقم بتعيين crossOrigin للروابط المحلية لتجنب مشاكل المتصفحات في الجوال
+    if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
       image.setAttribute('crossOrigin', 'anonymous');
     }
     image.src = url;
@@ -312,10 +313,13 @@ export default function StudentDashboard() {
     }
     
     setError(null);
+    // تنظيف الرابط السابق إذا وجد لمنع تسرب الذاكرة في الهواتف
+    if (tempImage && tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
+
     const imageUrl = URL.createObjectURL(file);
     setTempImage(imageUrl);
     setShowCropper(true);
-  }, []);
+  }, [tempImage]);
 
   const onCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -333,6 +337,7 @@ export default function StudentDashboard() {
         setPhotoFile(new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' }));
         setPhotoPreview(URL.createObjectURL(croppedBlob));
         setShowCropper(false);
+        if (tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
         setTempImage(null);
         setFormErrors(prev => ({ ...prev, photo: false }));
       }
@@ -344,6 +349,7 @@ export default function StudentDashboard() {
 
   const handleCropCancel = () => {
     setShowCropper(false);
+    if (tempImage && tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
     setTempImage(null);
     const fileInput = document.getElementById('photo') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
