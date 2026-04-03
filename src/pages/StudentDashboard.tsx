@@ -9,7 +9,7 @@ import Cropper, { Area, Point } from 'react-easy-crop';
 // الثوابت الخاصة بقياس الصورة المطلوب (3.5 * 4.5)
 const OUTPUT_WIDTH = 350; // عرض الصورة بالبكسل (يعادل 3.5 سم)
 const OUTPUT_HEIGHT = 450; // طول الصورة بالبكسل (يعادل 4.5 سم)
-const ASPECT_RATIO = 3.5 / 4.5;
+const ASPECT = 3.5 / 4.5;
 
 // دالة مساعدة لإنشاء صورة من رابط
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -310,10 +310,12 @@ export default function StudentDashboard() {
     }
     
     setError(null);
+    if (tempImage) URL.revokeObjectURL(tempImage);
+
     const imageUrl = URL.createObjectURL(file);
     setTempImage(imageUrl);
     setShowCropper(true);
-  }, []);
+  }, [tempImage]);
 
   const onCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -498,7 +500,7 @@ export default function StudentDashboard() {
                 image={tempImage}
                 crop={crop}
                 zoom={zoom}
-                aspectRatio={ASPECT_RATIO}
+                aspect={ASPECT}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
