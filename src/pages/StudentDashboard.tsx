@@ -494,19 +494,14 @@ export default function StudentDashboard() {
               <Cropper
                 image={tempImage}
                 crop={crop}
-                zoom={zoom} // حافظ على Zoom
-                aspect={3.5 / 4.5} // تعديل نسبة العرض إلى الارتفاع
+                zoom={zoom}
+                aspect={3.5 / 4.5}
+                cropShape="rect"
                 showGrid={true}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={onCropComplete}
               />
-              {/* دليل إضافي لمساعدة الطالب على موازنة الأعين والأنف في المنتصف */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-full h-[0.5px] bg-white/20"></div>
-                <div className="absolute w-[0.5px] h-full bg-white/20"></div>
-                <div className="absolute w-[175px] h-[225px] border border-blue-500/30 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
-              </div>
             </div>
 
             {/* شريط التحكم في التكبير (Zoom Slider) */}
