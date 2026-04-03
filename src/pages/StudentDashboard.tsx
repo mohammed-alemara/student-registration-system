@@ -1,51 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import logo from '../../logo.png';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
-import Cropper from 'react-easy-crop';
-import { Point, Area } from 'react-easy-crop/types';
-
-// دالة مساعدة لإنشاء صورة من رابط
-const createImage = (url: string): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
-    image.src = url;
-  });
-
-// دالة معالجة قص الصورة وتحويلها إلى Blob
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area, imageQuality: number = 0.9): Promise<Blob> => {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) throw new Error('No 2d context');
-
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
-  );
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-    }, 'image/jpeg', imageQuality); // تم إضافة معامل الجودة هنا
-  });
-};
+import Cropper from 'react-cropper';
+import 'cropperjs/dist/cropper.css';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -61,10 +21,8 @@ export default function StudentDashboard() {
 
   // حالات أداة القص
   const [tempImage, setTempImage] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [showCropper, setShowCropper] = useState(false);
+  const cropperRef = useRef<any>(null);
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -310,28 +268,28 @@ export default function StudentDashboard() {
     setShowCropper(true);
   }, []);
 
-  const onCropComplete = useCallback((_sharedArea: Area, bypassedAreaPixels: Area) => {
-    setCroppedAreaPixels(bypassedAreaPixels);
-  }, []);
-
   const handleCropSave = async () => {
-    try {
-      if (tempImage && croppedAreaPixels) { // يمكنك تعديل 0.9 إلى قيمة أخرى بين 0 و 1 للتحكم في الجودة
-        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
-        const croppedFile = new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' });
-        
-        if (photoPreview && photoPreview.startsWith('blob:')) {
-          URL.revokeObjectURL(photoPreview);
-        }
+    const cropper = cropperRef.current?.cropper;
+    if (!cropper) return;
 
-        setPhotoFile(croppedFile);
-        setPhotoPreview(URL.createObjectURL(croppedBlob));
-        setShowCropper(false);
-        setTempImage(null);
-        
-        // إزالة خطأ الصورة التفاعلي
-        setFormErrors(prev => ({ ...prev, photo: false }));
-      }
+    try {
+      const canvas = cropper.getCroppedCanvas({
+        width: 350,
+        height: 450,
+        imageSmoothingQuality: 'high',
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+          
+          setPhotoFile(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+          setPhotoPreview(URL.createObjectURL(blob));
+          setShowCropper(false);
+          setTempImage(null);
+          setFormErrors(prev => ({ ...prev, photo: false }));
+        }
+      }, 'image/jpeg', 0.9);
     } catch (e) {
       console.error(e);
       setError('حدث خطأ أثناء معالجة الصورة');
@@ -490,34 +448,20 @@ export default function StudentDashboard() {
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[400px] touch-none">
+            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[350px]">
               <Cropper
-                image={tempImage}
-                crop={crop}
-                zoom={zoom}
+                src={tempImage}
+                style={{ height: 400, width: "100%" }}
+                initialAspectRatio={3.5 / 4.5}
                 aspect={3.5 / 4.5}
-                cropShape="rect"
-                showGrid={true}
-                onCropChange={setCrop}
-                onZoomChange={setZoom}
-                onCropComplete={onCropComplete}
+                guides={true}
+                ref={cropperRef}
+                viewMode={1}
+                dragMode="move"
+                background={false}
+                responsive={true}
+                checkOrientation={false}
               />
-            </div>
-
-            {/* شريط التحكم في التكبير (Zoom Slider) */}
-            <div className="px-6 py-4 border-t bg-gray-50">
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <span className="text-sm font-medium text-gray-700 w-16">التكبير:</span>
-                <input
-                  type="range"
-                  value={zoom}
-                  min={1}
-                  max={3}
-                  step={0.1}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-              </div>
             </div>
 
             <div className="p-4 flex justify-end border-t space-x-3 space-x-reverse">

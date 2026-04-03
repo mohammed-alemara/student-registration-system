@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import logo from '../../logo.png';
 import { supabase, StudentRegistration, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Search, AlertTriangle, Loader2, Eye, Edit2, Trash2, X, Save, CheckCircle } from 'lucide-react';
+import { LogOut, Users, Search, AlertTriangle, Loader2, Eye, Edit2, Trash2, X, Save, CheckCircle, Upload, Scissors } from 'lucide-react';
+import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
+import Cropper from 'react-cropper';
+import 'cropperjs/dist/cropper.css';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -15,6 +18,13 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // حالات تعديل الصورة في لوحة المشرف
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const cropperRef = useRef<any>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -116,6 +126,8 @@ export default function AdminDashboard() {
   const handleOpenModal = (student: StudentRegistration, editMode: boolean = false) => {
     setSelectedStudent({ ...student });
     setIsEditing(editMode);
+    setPhotoPreview(student.photo_url || null);
+    setPhotoFile(null);
     setIsModalOpen(true);
   };
 
@@ -124,14 +136,34 @@ export default function AdminDashboard() {
     
     try {
       setActionLoading(true);
+
+      let finalPhotoUrl = selectedStudent.photo_url;
+
+      // رفع الصورة الجديدة إذا قام المشرف بتغييرها
+      if (photoFile) {
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${selectedStudent.student_id}-${Math.random()}.${fileExt}`;
+        const filePath = `${selectedStudent.student_id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('student_photos')
+          .upload(filePath, photoFile, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('student_photos')
+          .getPublicUrl(filePath);
+
+        finalPhotoUrl = publicUrl;
+      }
       
       // استبعاد الحقول التي لا يمكن تعديلها (مثل المعرفات والحقول التلقائية)
-      // إرسال هذه الحقول في طلب التحديث يتسبب في رفض الطلب من قبل Supabase
-      const { id, student_id, student_number, created_at, ...updateData } = selectedStudent as any;
+      const { id, student_id, student_number, created_at, photo_url, ...updateData } = selectedStudent as any;
 
       const { error } = await supabase
         .from('student_registrations')
-        .update(updateData)
+        .update({ ...updateData, photo_url: finalPhotoUrl })
         .eq('id', id);
 
       if (error) throw error;
@@ -144,6 +176,39 @@ export default function AdminDashboard() {
       showToast('فشل التحديث. تأكد من صلاحيات قاعدة البيانات.', 'error');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const imageUrl = URL.createObjectURL(file);
+    setTempImage(imageUrl);
+    setShowCropper(true);
+  };
+
+  const handleCropSave = async () => {
+    const cropper = cropperRef.current?.cropper;
+    if (cropper) {
+      try {
+        // استخراج الصورة المقتصة بأبعاد 3.5 * 4.5 تناسبياً
+        const canvas = cropper.getCroppedCanvas({
+          width: 350,
+          height: 450,
+          imageSmoothingQuality: 'high',
+        });
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            setPhotoFile(new File([blob], 'student_photo.jpg', { type: 'image/jpeg' }));
+            setPhotoPreview(URL.createObjectURL(blob));
+            setShowCropper(false);
+            setTempImage(null);
+          }
+        }, 'image/jpeg', 0.9);
+      } catch (e) {
+        showToast('خطأ في معالجة الصورة', 'error');
+      }
     }
   };
 
@@ -267,11 +332,19 @@ export default function AdminDashboard() {
 
             <div className="flex-1 overflow-y-auto p-8 space-y-8 text-right">
               <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="w-32 h-44 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border-2 border-slate-200">
-                  {selectedStudent.photo_url ? (
-                    <img src={selectedStudent.photo_url} alt="Student" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-400">لا توجد صورة</div>
+                <div className="relative group w-32 h-44 flex-shrink-0">
+                  <div className="w-full h-full bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">لا توجد صورة</div>
+                    )}
+                  </div>
+                  {isEditing && (
+                    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-2xl">
+                      <Upload className="text-white h-8 w-8" />
+                      <input type="file" className="hidden" accept="image/jpeg,image/jpg" onChange={handlePhotoChange} />
+                    </label>
                   )}
                 </div>
                 
@@ -281,43 +354,60 @@ export default function AdminDashboard() {
                     { label: 'اسم الأب', key: 'father_name' },
                     { label: 'اسم الجد', key: 'grandfather_name' },
                     { label: 'اسم والد الجد', key: 'great_grandfather_name' },
+                    { label: 'الجنس', key: 'gender', options: ['male', 'female'], labels: { male: 'ذكر', female: 'أنثى' } },
                     { label: 'تاريخ الميلاد', key: 'date_of_birth', type: 'date' },
-                    { label: 'محل الولادة', key: 'place_of_birth' },
-                    { label: 'نوع التقديم', key: 'application_type' },
+                    { label: 'محل الولادة', key: 'place_of_birth', options: ['بغداد', 'البصرة', 'النجف الاشرف', 'كربلاء المقدسة', 'بابل', 'واسط', 'ميسان', 'ذي قار', 'المثنى', 'القادسية', 'الأنبار', 'ديالى', 'صلاح الدين', 'نينوى', 'كركوك', 'أربيل', 'السليمانية', 'دهوك'] },
+                    { label: 'نوع التقديم', key: 'application_type', options: APPLICATION_TYPES },
                     { label: 'رقم الموبايل', key: 'mobile_number' },
-                    { label: 'الحالة الاجتماعية', key: 'marital_status' },
-                    { label: 'الديانة', key: 'religion' },
-                    { label: 'القومية', key: 'ethnicity' },
-                    { label: 'الحالة الحياتية للأب', key: 'father_life_status' },
+                    { label: 'الحالة الاجتماعية', key: 'marital_status', options: ['متزوج', 'باكر', 'مطلق', 'ارمل'] },
+                    { label: 'الديانة', key: 'religion', options: ['مسلم', 'مسيحي', 'صابئي', 'ايزيدي'] },
+                    { label: 'هل هو موظف؟', key: 'is_gov_employee', options: ['نعم', 'لا'] },
+                    { label: 'الدائرة الحكومية', key: 'gov_department' },
+                    { label: 'القومية', key: 'ethnicity', options: ['عربي', 'كردي', 'تركماني', 'أخرى'] },
+                    { label: 'الحالة الحياتية للأب', key: 'father_life_status', options: ['حي', 'متوفي'] },
                     { label: 'اسم الأم الثلاثي', key: 'mother_name' },
                     { label: 'اسم والد الأم', key: 'mother_father_name' },
                     { label: 'اسم جد الأم', key: 'mother_grandfather_name' },
-                    { label: 'القضاء', key: 'district' },
-                    { label: 'الناحية', key: 'sub_district' },
+                    { label: 'القضاء', key: 'district', options: ['النجف', 'الكوفة', 'المناذرة', 'المشخاب'] },
+                    { label: 'الناحية', key: 'sub_district', options: ['مركز النجف', 'الحيدرية', 'الرضوية', 'الشبكة', 'بانيقيا', 'مركز الكوفة', 'العباسية', 'الحرية', 'مركز المناذرة', 'الحيرة', 'مركز المشخاب', 'القادسية'] },
                     { label: 'اسم الحي', key: 'neighborhood' },
                     { label: 'محلة', key: 'mahalla' },
                     { label: 'زقاق', key: 'alley' },
                     { label: 'دار', key: 'house_number' },
                     { label: 'رقم البطاقة الوطنية', key: 'national_id_number' },
                     { label: 'تاريخ إصدارها', key: 'national_id_date', type: 'date' },
-                    { label: 'جهة الإصدار', key: 'national_id_issuer' },
+                    { label: 'جهة الإصدار', key: 'national_id_issuer', options: NATIONAL_ID_ISSUERS },
                     { label: 'رقم بطاقة السكن', key: 'residence_card_number' },
-                    { label: 'جهة إصدار بطاقة السكن', key: 'residence_card_issuer' },
+                    { label: 'تاريخ بطاقة السكن', key: 'residence_card_date', type: 'date' },
+                    { label: 'جهة إصدار بطاقة السكن', key: 'residence_card_issuer', options: RESIDENCE_CARD_ISSUERS },
                     { label: 'اسم آخر مدرسة', key: 'previous_school_name' },
-                    { label: 'مديرية التربية', key: 'education_directorate' },
+                    { label: 'مديرية التربية', key: 'education_directorate', options: EDUCATION_DIRECTORATES },
                   ].map((field) => (
                     <div key={field.key}>
                       <label className="block text-xs font-bold text-slate-400 mb-1 mr-1">{field.label}</label>
                       {isEditing ? (
-                        <input
-                          type={field.type || 'text'}
-                          value={(selectedStudent as any)[field.key] || ''}
-                          onChange={(e) => setSelectedStudent({ ...selectedStudent, [field.key]: e.target.value })}
-                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
-                        />
-                      ) : (
+                        field.options ? (
+                          <select
+                            value={(selectedStudent as any)[field.key] || ''}
+                            onChange={(e) => setSelectedStudent({ ...selectedStudent, [field.key]: e.target.value })}
+                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                          >
+                            <option value="">اختر...</option>
+                            {field.options.map(opt => (
+                              <option key={opt} value={opt}>{(field.labels as any)?.[opt] || opt}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={field.type || 'text'}
+                            value={(selectedStudent as any)[field.key] || ''}
+                            onChange={(e) => setSelectedStudent({ ...selectedStudent, [field.key]: e.target.value })}
+                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                          />
+                        )
+                  ) : (
                         <div className="px-4 py-2 bg-slate-50 border border-transparent rounded-xl text-slate-700 font-semibold text-sm">
-                          {(selectedStudent as any)[field.key] || '-'}
+                          {field.key === 'gender' ? ((field.labels as any)[(selectedStudent as any).gender] || '-') : ((selectedStudent as any)[field.key] || '-')}
                         </div>
                       )}
                     </div>
@@ -347,6 +437,39 @@ export default function AdminDashboard() {
                   حفظ التعديلات
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* واجهة قص الصورة للمشرف */}
+      {showCropper && tempImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-xl font-black text-slate-800 flex items-center">
+                <Scissors className="ml-2 h-5 w-5 text-blue-600" />
+                تعديل قياس صورة الطالب
+              </h3>
+            </div>
+            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[350px]">
+              <Cropper
+                src={tempImage}
+                style={{ height: 400, width: "100%" }}
+                initialAspectRatio={3.5 / 4.5}
+                aspectRatio={3.5 / 4.5}
+                guides={false}
+                ref={cropperRef}
+                viewMode={1}
+                dragMode="move"
+                background={false}
+                responsive={true}
+                checkOrientation={false}
+              />
+            </div>
+            <div className="p-6 flex justify-end border-t bg-white space-x-3 space-x-reverse">
+              <button onClick={() => { setShowCropper(false); setTempImage(null); }} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-all">إلغاء</button>
+              <button onClick={handleCropSave} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">حفظ الصورة</button>
             </div>
           </div>
         </div>
