@@ -17,7 +17,9 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
+    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+      image.setAttribute('crossOrigin', 'anonymous');
+    }
     image.src = url;
   });
 
@@ -310,12 +312,10 @@ export default function StudentDashboard() {
     }
     
     setError(null);
-    if (tempImage) URL.revokeObjectURL(tempImage);
-
     const imageUrl = URL.createObjectURL(file);
     setTempImage(imageUrl);
     setShowCropper(true);
-  }, [tempImage]);
+  }, []);
 
   const onCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -487,8 +487,8 @@ export default function StudentDashboard() {
 
       {/* واجهة قص الصورة (Modal) */}
       {showCropper && tempImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6">
-          <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[95vh]">
             <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
               <h3 className="text-xl font-black text-slate-800 flex items-center">
                 <Scissors className="ml-2 h-5 w-5 text-blue-600" />
@@ -497,6 +497,7 @@ export default function StudentDashboard() {
             </div>
             <div className="relative flex-1 w-full mx-auto bg-gray-900 min-h-[400px]">
               <Cropper
+                key={tempImage}
                 image={tempImage}
                 crop={crop}
                 zoom={zoom}

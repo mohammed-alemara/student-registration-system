@@ -17,7 +17,9 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
+    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+      image.setAttribute('crossOrigin', 'anonymous');
+    }
     image.src = url;
   });
 
@@ -241,12 +243,10 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (tempImage) URL.revokeObjectURL(tempImage);
-
     const imageUrl = URL.createObjectURL(file);
     setTempImage(imageUrl);
     setShowCropper(true);
-  }, [tempImage]);
+  }, []);
 
   const onCropComplete = useCallback((_area: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels);
@@ -508,6 +508,7 @@ export default function AdminDashboard() {
             </div>
             <div className="relative flex-1 w-full mx-auto bg-gray-900 min-h-[400px]">
               <Cropper
+                key={tempImage}
                 image={tempImage}
                 crop={crop}
                 zoom={zoom}
