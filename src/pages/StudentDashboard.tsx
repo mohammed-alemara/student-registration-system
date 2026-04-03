@@ -18,7 +18,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
   });
 
 // دالة معالجة قص الصورة وتحويلها إلى Blob
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area, imageQuality: number = 0.9): Promise<Blob> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -43,7 +43,7 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> =
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
-    }, 'image/jpeg');
+    }, 'image/jpeg', imageQuality); // تم إضافة معامل الجودة هنا
   });
 };
 
@@ -316,7 +316,7 @@ export default function StudentDashboard() {
 
   const handleCropSave = async () => {
     try {
-      if (tempImage && croppedAreaPixels) {
+      if (tempImage && croppedAreaPixels) { // يمكنك تعديل 0.9 إلى قيمة أخرى بين 0 و 1 للتحكم في الجودة
         const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
         const croppedFile = new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' });
         
