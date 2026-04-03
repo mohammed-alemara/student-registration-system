@@ -490,7 +490,7 @@ export default function StudentDashboard() {
                 تعديل قياس الصورة
               </h3>
             </div>
-            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[300px]">
+            <div className="relative flex-1 w-full mx-auto bg-gray-900 overflow-hidden min-h-[400px] touch-none">
               <Cropper
                 image={tempImage}
                 crop={crop}
@@ -505,7 +505,7 @@ export default function StudentDashboard() {
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="w-full h-[0.5px] bg-white/20"></div>
                 <div className="absolute w-[0.5px] h-full bg-white/20"></div>
-                <div className="absolute w-32 h-44 border border-blue-500/30 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                <div className="absolute w-[175px] h-[225px] border border-blue-500/30 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
               </div>
             </div>
 
