@@ -487,12 +487,12 @@ export default function StudentDashboard() {
 
       {/* واجهة قص الصورة (Modal) */}
       {showCropper && tempImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 sm:p-6">
-          <div className="bg-white rounded-xl overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] overflow-hidden w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-xl font-black text-slate-800 flex items-center">
                 <Scissors className="ml-2 h-5 w-5 text-blue-600" />
-                تعديل قياس الصورة
+                تعديل قياس صورة الطالب
               </h3>
             </div>
             <div className="relative flex-1 w-full mx-auto bg-gray-900 min-h-[400px]">
@@ -506,9 +506,9 @@ export default function StudentDashboard() {
                 onCropComplete={onCropComplete}
               />
             </div>
-            <div className="p-4 bg-white border-t space-y-4">
+            <div className="p-6 bg-white border-t space-y-6">
               <div className="flex items-center space-x-4 space-x-reverse px-2">
-                <span className="text-xs font-bold text-slate-500">الزوم</span>
+                <span className="text-sm font-black text-slate-500">الزوم</span>
                 <input
                   type="range"
                   value={zoom}
@@ -521,8 +521,8 @@ export default function StudentDashboard() {
                 />
               </div>
               <div className="flex justify-end space-x-3 space-x-reverse">
-              <button onClick={handleCropCancel} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">إلغاء</button>
-              <button onClick={handleCropSave} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">اعتماد الصورة</button>
+              <button onClick={handleCropCancel} className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-all">إلغاء</button>
+              <button onClick={handleCropSave} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">حفظ الصورة</button>
             </div>
             </div>
           </div>
