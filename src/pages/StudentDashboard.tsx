@@ -523,7 +523,7 @@ export default function StudentDashboard() {
           .py-10 { padding-top: 0 !important; padding-bottom: 0 !important; }
           .bg-white { border: none !important; box-shadow: none !important; }
           .sm\:rounded-[2rem] { border-radius: 0 !important; }
-          .bg-gradient-to-l, .bg-gradient-to-r, .bg-slate-50, .bg-slate-50\/50, .h-px, .border-t { display: none !important; }
+          .bg-gradient-to-l, .bg-gradient-to-r, .bg-slate-50, .bg-slate-50\/50, .h-px, .border-t, .instructions-panel { display: none !important; }
           
           /* إجبار المتصفح على إظهار ألوان الخلفية والصور */
           .print-header p { 
@@ -537,7 +537,7 @@ export default function StudentDashboard() {
           }
           
           /* تحويل الشبكة إلى عرض كامل في الطباعة */
-          .grid { 
+          .form-grid { 
             display: grid !important; 
             grid-template-columns: repeat(4, 1fr) !important; 
             gap: 8px 20px !important; 
@@ -551,7 +551,6 @@ export default function StudentDashboard() {
           label { font-size: 9pt !important; color: #475569 !important; font-weight: 900 !important; }
           input, select { 
             border: none !important; 
-            border-bottom: 1px solid #cbd5e1 !important; 
             padding: 2px 0 !important; 
             background: transparent !important;
             font-size: 10pt !important;
@@ -724,14 +723,130 @@ export default function StudentDashboard() {
             )}
 
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
-              <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+              {/* قسم الطباعة المحسن: يظهر فقط عند الطباعة */}
+              <div className="hidden print:block">
+                <div className="flex flex-row items-start gap-8 mb-4">
+                  {/* الصورة الشخصية على اليمين - تمتد على صفين */}
+                  <div className="photo-box relative flex-shrink-0 h-[4.5cm] w-[3.5cm] border-2 border-black overflow-hidden flex items-center justify-center bg-white shadow-none">
+                    {photoPreview ? (
+                      <img 
+                        src={photoPreview} 
+                        alt="صورة الطالب" 
+                        className="h-full w-full object-cover" 
+                      />
+                    ) : (
+                      <div className="text-[8pt] text-slate-400">الصورة</div>
+                    )}
+                  </div>
+
+                  {/* الحقول التي بجانب الصورة (الصف الأول والثاني) */}
+                  <div className="flex-1 space-y-6">
+                    {/* الصف الأول: الأسماء الأربعة */}
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">الاسم الأول</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.first_name || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">اسم الأب</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.father_name || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">اسم الجد</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.grandfather_name || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">والد الجد</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.great_grandfather_name || '-'}</div>
+                      </div>
+                    </div>
+                    
+                    {/* الصف الثاني: الجنس، التولد، محل الولادة، الحالة الاجتماعية */}
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">الجنس</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.gender === 'male' ? 'ذكر' : (formData.gender === 'female' ? 'أنثى' : '-')}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">تاريخ الميلاد</label>
+                        <div className="text-[11pt] font-bold text-black" dir="ltr">{formData.date_of_birth || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">محل الولادة</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.place_of_birth || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-[9pt] font-black text-slate-600 mb-0.5">الحالة الاجتماعية</label>
+                        <div className="text-[11pt] font-bold text-black">{formData.marital_status || '-'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* بقية الحقول تحت الصورة بشكل صفوف كاملة */}
+                <div className="space-y-6 mt-6">
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">رقم الموبايل</label>
+                      <div className="text-[11pt] font-bold text-black" dir="ltr">{formData.mobile_number || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">الديانة</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.religion || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">القومية</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.ethnicity || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">حالة الأب</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.father_life_status || '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">موظف حكومي</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.is_gov_employee || '-'}</div>
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">الدائرة</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.gov_department || 'لا يوجد'}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[9pt] font-black text-slate-600 mb-0.5">اسم الأم الثلاثي</label>
+                      <div className="text-[11pt] font-bold text-black">{formData.mother_name} {formData.mother_father_name} {formData.mother_grandfather_name}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">رقم البطاقة الموحدة</label><div className="text-[11pt] font-bold text-black">{formData.national_id_number || '-'}</div></div>
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">تاريخ الإصدار</label><div className="text-[11pt] font-bold text-black">{formData.national_id_date || '-'}</div></div>
+                    <div className="col-span-2"><label className="block text-[9pt] font-black text-slate-600 mb-0.5">جهة إصدار الموحدة</label><div className="text-[11pt] font-bold text-black">{formData.national_id_issuer || '-'}</div></div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">رقم بطاقة السكن</label><div className="text-[11pt] font-bold text-black">{formData.residence_card_number || '-'}</div></div>
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">تاريخ بطاقة السكن</label><div className="text-[11pt] font-bold text-black">{formData.residence_card_date || '-'}</div></div>
+                    <div className="col-span-2"><label className="block text-[9pt] font-black text-slate-600 mb-0.5">جهة إصدار السكن</label><div className="text-[11pt] font-bold text-black">{formData.residence_card_issuer || '-'}</div></div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">القضاء/الناحية</label><div className="text-[11pt] font-bold text-black">{formData.district} / {formData.sub_district}</div></div>
+                    <div><label className="block text-[9pt] font-black text-slate-600 mb-0.5">الحي / الزقاق / الدار</label><div className="text-[11pt] font-bold text-black">{formData.neighborhood} / {formData.alley || '0'} / {formData.house_number || '0'}</div></div>
+                    <div className="col-span-2"><label className="block text-[9pt] font-black text-slate-600 mb-0.5">نوع المرحلة والمدرسة السابقة</label><div className="text-[11pt] font-bold text-black">{formData.application_type} - {formData.previous_school_name}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2 form-grid print:hidden">
                 
                 {/* Application Type */}
                 <div className="sm:col-span-2">
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">نوع التقديم</h4>
                 </div>
                 
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <label htmlFor="application_type" className="block text-sm font-black text-slate-700 mb-1 mr-1">
                     المرحلة الدراسية المراد التقديم إليها <span className="text-red-500 mr-1">*</span>
                   </label>
@@ -749,11 +864,11 @@ export default function StudentDashboard() {
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <label className="block text-sm font-black text-slate-700 mb-1 mr-1 print:hidden">
                     الصورة الشخصية الرسمية <span className="text-red-500 mr-1">*</span>
                   </label>
-                <div className="mt-2 flex flex-col md:flex-row gap-6 items-stretch print:flex-row print:items-center print:gap-0">
+                <div className="mt-2 flex flex-col md:flex-row gap-6 items-stretch">
                     <label 
                       htmlFor="photo" 
                       className={`photo-box relative flex-shrink-0 h-44 w-32 cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-400 bg-red-50/30 ring-4 ring-red-500/5' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10'}`}
@@ -813,7 +928,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2 print:hidden">
+                <div className="sm:col-span-2">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -822,31 +937,31 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">البيانات الشخصية</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="first_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">الاسم الأول <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="first_name" id="first_name" maxLength={100} value={formData.first_name} onChange={handleChange} className={inputClass('first_name')} />
                   {formErrors.first_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="father_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الأب <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="father_name" id="father_name" maxLength={100} value={formData.father_name} onChange={handleChange} className={inputClass('father_name')} />
                   {formErrors.father_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="grandfather_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الجد <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="grandfather_name" id="grandfather_name" maxLength={100} value={formData.grandfather_name} onChange={handleChange} className={inputClass('grandfather_name')} />
                   {formErrors.grandfather_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="great_grandfather_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم والد الجد <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="great_grandfather_name" id="great_grandfather_name" maxLength={100} value={formData.great_grandfather_name} onChange={handleChange} className={inputClass('great_grandfather_name')} />
                   {formErrors.great_grandfather_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="gender" className="block text-sm font-black text-slate-700 mb-1 mr-1">الجنس <span className="text-red-500 mr-1">*</span></label>
                   <select id="gender" name="gender" value={formData.gender} onChange={handleChange} className={inputClass('gender')}>
                     <option value="" disabled>اختر...</option>
@@ -856,7 +971,7 @@ export default function StudentDashboard() {
                   {formErrors.gender && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="date_of_birth" className="block text-sm font-black text-slate-700 mb-1 mr-1">تاريخ الميلاد <span className="text-red-500 mr-1">*</span></label>
                   <input type="date" name="date_of_birth" id="date_of_birth" value={formData.date_of_birth} onChange={handleChange} className={inputClass('date_of_birth')} />
                   {formErrors.date_of_birth && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
@@ -872,7 +987,7 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات شخصية إضافية</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="place_of_birth" className="block text-sm font-black text-slate-700 mb-1 mr-1">محل الولادة <span className="text-red-500 mr-1">*</span></label>
                   <select id="place_of_birth" name="place_of_birth" value={formData.place_of_birth} onChange={handleChange} className={inputClass('place_of_birth')}>
                     <option value="" disabled>اختر...</option>
@@ -898,7 +1013,7 @@ export default function StudentDashboard() {
                   {formErrors.place_of_birth && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="marital_status" className="block text-sm font-black text-slate-700 mb-1 mr-1">الحالة الاجتماعية <span className="text-red-500 mr-1">*</span></label>
                   <select id="marital_status" name="marital_status" value={formData.marital_status} onChange={handleChange} className={inputClass('marital_status')}>
                     <option value="" disabled>اختر...</option>
@@ -910,13 +1025,13 @@ export default function StudentDashboard() {
                   {formErrors.marital_status && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="mobile_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم الموبايل <span className="text-red-500 mr-1">*</span></label>
                   <input type="tel" name="mobile_number" id="mobile_number" pattern="^07[0-9]{9}$" title="يجب أن يبدأ بـ 07 ويتكون من 11 رقم" placeholder="07XXXXXXXXX" value={formData.mobile_number} onChange={handleChange} className={inputClass('mobile_number')} dir="ltr" />
                   {formErrors.mobile_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="religion" className="block text-sm font-black text-slate-700 mb-1 mr-1">الديانة <span className="text-red-500 mr-1">*</span></label>
                   <select id="religion" name="religion" value={formData.religion} onChange={handleChange} className={inputClass('religion')}>
                     <option value="" disabled>اختر...</option>
@@ -928,7 +1043,7 @@ export default function StudentDashboard() {
                   {formErrors.religion && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="ethnicity" className="block text-sm font-black text-slate-700 mb-1 mr-1">القومية <span className="text-red-500 mr-1">*</span></label>
                   <select id="ethnicity" name="ethnicity" value={formData.ethnicity} onChange={handleChange} className={inputClass('ethnicity')}>
                     <option value="" disabled>اختر...</option>
@@ -940,7 +1055,7 @@ export default function StudentDashboard() {
                   {formErrors.ethnicity && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="father_life_status" className="block text-sm font-black text-slate-700 mb-1 mr-1">الحالة الحياتية للأب <span className="text-red-500 mr-1">*</span></label>
                   <select id="father_life_status" name="father_life_status" value={formData.father_life_status} onChange={handleChange} className={inputClass('father_life_status')}>
                     <option value="" disabled>اختر...</option>
@@ -950,7 +1065,7 @@ export default function StudentDashboard() {
                   {formErrors.father_life_status && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="is_gov_employee" className="block text-sm font-black text-slate-700 mb-1 mr-1">هل أنت موظف حكومي؟ <span className="text-red-500 mr-1">*</span></label>
                   <select id="is_gov_employee" name="is_gov_employee" value={formData.is_gov_employee} onChange={handleChange} className={inputClass('is_gov_employee')}>
                     <option value="" disabled>اختر...</option>
@@ -960,7 +1075,7 @@ export default function StudentDashboard() {
                   {formErrors.is_gov_employee && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                {formData.is_gov_employee === 'نعم' && (
+                {formData.is_gov_employee === 'نعم' && ( /* This div is conditionally rendered, so it doesn't need print:hidden */
                   <div>
                     <label htmlFor="gov_department" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الدائرة الحكومية <span className="text-red-500 mr-1">*</span></label>
                     <input type="text" name="gov_department" id="gov_department" maxLength={150} value={formData.gov_department} onChange={handleChange} className={inputClass('gov_department')} />
@@ -978,19 +1093,19 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات البطاقة الوطنية الموحدة</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="national_id_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم البطاقة الموحدة <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="national_id_number" id="national_id_number" pattern="^[0-9]{12}$" title="يجب أن يتكون رقم البطاقة الموحدة من 12 رقماً" placeholder="123456789012" value={formData.national_id_number} onChange={handleChange} className={inputClass('national_id_number')} dir="ltr" />
                   {formErrors.national_id_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="national_id_date" className="block text-sm font-black text-slate-700 mb-1 mr-1">تاريخ الإصدار <span className="text-red-500 mr-1">*</span></label>
                   <input type="date" name="national_id_date" id="national_id_date" value={formData.national_id_date} onChange={handleChange} className={inputClass('national_id_date')} />
                   {formErrors.national_id_date && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="national_id_issuer" className="block text-sm font-black text-slate-700 mb-1 mr-1">جهة الإصدار <span className="text-red-500 mr-1">*</span></label>
                   <select id="national_id_issuer" name="national_id_issuer" value={formData.national_id_issuer} onChange={handleChange} className={inputClass('national_id_issuer')}>
                     <option value="" disabled>اختر...</option>
@@ -1011,19 +1126,19 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات بطاقة السكن</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="residence_card_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">رقم بطاقة السكن <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="residence_card_number" id="residence_card_number" value={formData.residence_card_number} onChange={handleChange} className={inputClass('residence_card_number')} dir="ltr" />
                   {formErrors.residence_card_number && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="residence_card_date" className="block text-sm font-black text-slate-700 mb-1 mr-1">تاريخ بطاقة السكن <span className="text-red-500 mr-1">*</span></label>
                   <input type="date" name="residence_card_date" id="residence_card_date" value={formData.residence_card_date} onChange={handleChange} className={inputClass('residence_card_date')} />
                   {formErrors.residence_card_date && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="residence_card_issuer" className="block text-sm font-black text-slate-700 mb-1 mr-1">جهة الإصدار <span className="text-red-500 mr-1">*</span></label>
                   <select id="residence_card_issuer" name="residence_card_issuer" value={formData.residence_card_issuer} onChange={handleChange} className={inputClass('residence_card_issuer')}>
                     <option value="" disabled>اختر...</option>
@@ -1044,19 +1159,19 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">بيانات الأم</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="mother_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الأم <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="mother_name" id="mother_name" value={formData.mother_name} onChange={handleChange} className={inputClass('mother_name')} />
                   {formErrors.mother_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="mother_father_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم والد الأم <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="mother_father_name" id="mother_father_name" value={formData.mother_father_name} onChange={handleChange} className={inputClass('mother_father_name')} />
                   {formErrors.mother_father_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="mother_grandfather_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم جد الأم <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="mother_grandfather_name" id="mother_grandfather_name" value={formData.mother_grandfather_name} onChange={handleChange} className={inputClass('mother_grandfather_name')} />
                   {formErrors.mother_grandfather_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
@@ -1072,7 +1187,7 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">عنوان السكن</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="district" className="block text-sm font-black text-slate-700 mb-1 mr-1">القضاء <span className="text-red-500 mr-1">*</span></label>
                   <select id="district" name="district" value={formData.district} onChange={handleChange} className={inputClass('district')}>
                     <option value="" disabled>اختر...</option>
@@ -1084,7 +1199,7 @@ export default function StudentDashboard() {
                   {formErrors.district && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="sub_district" className="block text-sm font-black text-slate-700 mb-1 mr-1">الناحية <span className="text-red-500 mr-1">*</span></label>
                   <select id="sub_district" name="sub_district" value={formData.sub_district} onChange={handleChange} className={inputClass('sub_district')}>
                     <option value="" disabled>اختر...</option>
@@ -1104,7 +1219,7 @@ export default function StudentDashboard() {
                   {formErrors.sub_district && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="neighborhood" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم الحي <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="neighborhood" id="neighborhood" value={formData.neighborhood} onChange={handleChange} className={inputClass('neighborhood')} />
                   {formErrors.neighborhood && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
@@ -1112,17 +1227,17 @@ export default function StudentDashboard() {
 
                 <div>
                   <label htmlFor="mahalla" className="block text-sm font-black text-slate-700 mb-1 mr-1">محلة</label>
-                  <input type="text" name="mahalla" id="mahalla" value={formData.mahalla} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <input type="text" name="mahalla" id="mahalla" value={formData.mahalla} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all print:hidden" />
                 </div>
 
                 <div>
                   <label htmlFor="alley" className="block text-sm font-black text-slate-700 mb-1 mr-1">زقاق</label>
-                  <input type="text" name="alley" id="alley" value={formData.alley} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <input type="text" name="alley" id="alley" value={formData.alley} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all print:hidden" />
                 </div>
 
                 <div>
                   <label htmlFor="house_number" className="block text-sm font-black text-slate-700 mb-1 mr-1">دار</label>
-                  <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" />
+                  <input type="text" name="house_number" id="house_number" value={formData.house_number} onChange={handleChange} className="mt-2 block w-full py-3 px-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:focus:border-blue-500 transition-all print:hidden" />
                 </div>
 
                 {/* Section Separator */}
@@ -1135,13 +1250,13 @@ export default function StudentDashboard() {
                   <h4 className="text-lg font-bold text-slate-800 border-r-4 border-blue-600 pr-3 py-2 bg-slate-50/50 rounded-l-xl mb-4">معلومات الدراسة السابقة</h4>
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="previous_school_name" className="block text-sm font-black text-slate-700 mb-1 mr-1">اسم آخر مدرسة كان فيها الطالب <span className="text-red-500 mr-1">*</span></label>
                   <input type="text" name="previous_school_name" id="previous_school_name" value={formData.previous_school_name} onChange={handleChange} className={inputClass('previous_school_name')} />
                   {formErrors.previous_school_name && <p className="mt-1 text-[10px] font-bold text-red-500 flex items-center"><AlertTriangle className="w-3 h-3 ml-1" /> مطلوب</p>}
                 </div>
 
-                <div>
+                <div className="print:hidden">
                   <label htmlFor="education_directorate" className="block text-sm font-black text-slate-700 mb-1 mr-1">المديرية العامة التابعة لها المدرسة <span className="text-red-500 mr-1">*</span></label>
                   <select id="education_directorate" name="education_directorate" value={formData.education_directorate} onChange={handleChange} className={inputClass('education_directorate')}>
                     <option value="" disabled>اختر...</option>
