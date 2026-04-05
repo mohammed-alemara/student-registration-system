@@ -17,7 +17,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    // منع تعيين crossOrigin للروابط المحلية لضمان ظهور الصورة في آيفون
+    // لا تقم بتعيين crossOrigin للروابط المحلية (blob: أو data:) لضمان ظهور الصورة في آيفون
     if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
       image.setAttribute('crossOrigin', 'anonymous');
     }
@@ -25,7 +25,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
   });
 
 // دالة معالجة قص الصورة وتحويلها إلى Blob
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<string> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -47,12 +47,68 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> =
     OUTPUT_HEIGHT
   );
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-    }, 'image/jpeg', 0.9);
-  });
+  return canvas.toDataURL('image/jpeg', 0.9);
 };
+
+// دالة محسنة لتحويل رابط خارجي إلى Base64 مع دعم CORS كامل للطباعة الموثوقة
+  const urlToBase64 = async (url: string | null): Promise<string | null> => {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url; // Already data/blob URL
+
+    try {
+      // محاولة 1: Fetch مباشر مع CORS
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+      const response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'force-cache',
+        signal: controller.signal 
+      });
+
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      
+      // Convert blob → data URL
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('FileReader failed'));
+        reader.readAsDataURL(blob);
+      });
+
+    } catch (error: any) {
+      console.warn(`urlToBase64 failed for ${url}:`, error.message);
+      
+      // محاولة 2: Canvas drawing fallback
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+        
+        return new Promise((resolve) => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/jpeg', 0.9));
+            } else {
+              resolve(url);
+            }
+          };
+          img.onerror = () => resolve(url);
+        });
+      } catch {
+        return url;
+      }
+    }
+  };
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -172,10 +228,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleOpenModal = (student: StudentRegistration, editMode: boolean = false) => {
+  const handleOpenModal = async (student: StudentRegistration, editMode: boolean = false) => {
     setSelectedStudent({ ...student });
     setIsEditing(editMode);
-    setPhotoPreview(student.photo_url || null);
+    const base64Photo = await urlToBase64(student.photo_url || null);
+    if (base64Photo && !base64Photo?.startsWith('data:') && !base64Photo?.startsWith('blob:')) {
+      console.warn('Admin: Image preview not data URL');
+    }
+    setPhotoPreview(base64Photo);
     setPhotoFile(null);
     setIsModalOpen(true);
   };
@@ -259,14 +319,15 @@ export default function AdminDashboard() {
   const handleCropSave = async () => {
     try {
       if (tempImage && croppedAreaPixels) {
-        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+        const croppedDataUrl = await getCroppedImg(tempImage, croppedAreaPixels);
         
         if (photoPreview && photoPreview.startsWith('blob:')) {
           URL.revokeObjectURL(photoPreview);
         }
 
-        setPhotoFile(new File([croppedBlob], 'student_photo.jpg', { type: 'image/jpeg' }));
-        setPhotoPreview(URL.createObjectURL(croppedBlob));
+        const blob = await (await fetch(croppedDataUrl)).blob();
+        setPhotoFile(new File([blob], 'student_photo.jpg', { type: 'image/jpeg' }));
+        setPhotoPreview(croppedDataUrl); // Use Data URL for preview
         setShowCropper(false);
         if (tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
         setTempImage(null);
@@ -309,6 +370,7 @@ export default function AdminDashboard() {
       {/* تنسيق خاص لضمان ظهور الصور والألوان عند الطباعة */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
+          @page { size: A4; margin: 0; }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -333,7 +395,21 @@ export default function AdminDashboard() {
           }
           img { 
             display: block !important;
-            max-width: 200px !important; /* حجم مناسب للصورة الشخصية في الطباعة */
+            width: 3.5cm !important;
+            height: 4.5cm !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            border: 1.5pt solid #000 !important;
+            object-fit: cover !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .group.w-32.h-44, .photo-box {
+            width: 3.5cm !important;
+            height: 4.5cm !important;
+            display: block !important;
+            border: 1.5pt solid #000 !important;
+            position: static !important;
           }
         }
       ` }} />
@@ -436,7 +512,14 @@ export default function AdminDashboard() {
                 <div className="relative group w-32 h-44 flex-shrink-0">
                   <div className="w-full h-full bg-slate-100 rounded-2xl overflow-hidden border-2 border-slate-200">
                     {photoPreview ? (
-                      <img src={photoPreview} alt="Student" className="w-full h-full object-cover" />
+                      <img 
+                        src={photoPreview} 
+                        alt="Student" 
+                        className="w-full h-full object-cover" 
+                        loading="eager"
+                        decoding="async"
+                        crossOrigin={photoPreview.startsWith('http') ? 'anonymous' : undefined}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-400">لا توجد صورة</div>
                     )}

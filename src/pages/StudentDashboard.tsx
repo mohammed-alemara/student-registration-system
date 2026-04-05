@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import logo from '../../logo.png';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info } from 'lucide-react';
+import { LogOut, Save, CheckCircle, AlertTriangle, Upload, X, Scissors, Loader2, Info, Printer } from 'lucide-react';
 import { NATIONAL_ID_ISSUERS, RESIDENCE_CARD_ISSUERS, EDUCATION_DIRECTORATES, APPLICATION_TYPES } from '../lib/constants';
 import Cropper, { Area, Point } from 'react-easy-crop';
 
@@ -17,7 +17,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    // لا تقم بتعيين crossOrigin للروابط المحلية لتجنب مشاكل المتصفحات في الجوال
+    // لا تقم بتعيين crossOrigin للروابط المحلية (blob: أو data:) لتجنب مشاكل المتصفحات في الجوال
     if (url && !url.startsWith('blob:') && !url.startsWith('data:')) {
       image.setAttribute('crossOrigin', 'anonymous');
     }
@@ -25,7 +25,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
   });
 
 // دالة معالجة قص الصورة وتحويلها إلى Blob
-const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<string> => {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -48,12 +48,68 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> =
     OUTPUT_HEIGHT
   );
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-    }, 'image/jpeg', 0.9);
-  });
+  return canvas.toDataURL('image/jpeg', 0.9);
 };
+
+// دالة محسنة لتحويل رابط خارجي إلى Base64 مع دعم CORS كامل للطباعة الموثوقة
+  const urlToBase64 = async (url: string | null): Promise<string | null> => {
+    if (!url) return null;
+    if (!url.startsWith('http')) return url; // Already data/blob URL
+
+    try {
+      // محاولة 1: Fetch مباشر مع CORS
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // زيادة المهلة لتناسب الاتصالات الضعيفة
+
+      const response = await fetch(url, { 
+        mode: 'cors',
+        cache: 'force-cache',
+        signal: controller.signal 
+      });
+
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      
+      // تحويل الـ blob إلى Data URL بشكل يضمن تضمينها في الطباعة
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('FileReader failed'));
+        reader.readAsDataURL(blob);
+      });
+
+    } catch (error: any) {
+      console.warn(`urlToBase64 failed for ${url}:`, error.message);
+
+      // محاولة 2: استخدام Canvas كحل بديل لتجاوز مشاكل بعض المتصفحات
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+        
+        return new Promise((resolve) => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0);
+              resolve(canvas.toDataURL('image/jpeg', 1.0));
+            } else {
+              resolve(url);
+            }
+          };
+          img.onerror = () => resolve(url);
+        });
+      } catch {
+        return url;
+      }
+    }
+  };
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -259,10 +315,20 @@ export default function StudentDashboard() {
           photo_url: studentRecord.photo_url || '',
           application_type: studentRecord.application_type || '',
         });
-        if (studentRecord.photo_url) {
+      if (studentRecord.photo_url) {
+        try {
+          const base64Photo = await urlToBase64(studentRecord.photo_url);
+          if (base64Photo && !base64Photo.startsWith('blob:') && !base64Photo.startsWith('data:')) {
+            // If still http URL, force canvas conversion
+            console.warn('Preloaded image not converted to data URL, forcing canvas...');
+          }
+          setPhotoPreview(base64Photo);
+        } catch (error) {
+          console.error('Failed to preload photo:', error);
           setPhotoPreview(studentRecord.photo_url);
         }
-        setSuccess(true); // Indicate that data was loaded successfully
+      }
+      setSuccess(true); // Indicate that data was loaded successfully
       } else {
         // Student profile exists, but no registration record.
         // They should be allowed to fill the form.
@@ -328,14 +394,15 @@ export default function StudentDashboard() {
   const handleCropSave = async () => {
     try {
       if (tempImage && croppedAreaPixels) {
-        const croppedBlob = await getCroppedImg(tempImage, croppedAreaPixels);
+        const croppedDataUrl = await getCroppedImg(tempImage, croppedAreaPixels);
         
         if (photoPreview && photoPreview.startsWith('blob:')) {
           URL.revokeObjectURL(photoPreview);
         }
         
-        setPhotoFile(new File([croppedBlob], 'photo.jpg', { type: 'image/jpeg' }));
-        setPhotoPreview(URL.createObjectURL(croppedBlob));
+        const blob = await (await fetch(croppedDataUrl)).blob();
+        setPhotoFile(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+        setPhotoPreview(croppedDataUrl); // Use Data URL for preview
         setShowCropper(false);
         if (tempImage.startsWith('blob:')) URL.revokeObjectURL(tempImage);
         setTempImage(null);
@@ -448,19 +515,76 @@ export default function StudentDashboard() {
       {/* تنسيق خاص لضمان ظهور الصور والألوان عند الطباعة */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
+          @page { size: A4; margin: 0; }
+          nav, button, .no-print, .instructions-panel { display: none !important; }
+          body { background: white !important; }
+          .min-h-screen { background: white !important; padding: 0 !important; min-height: auto !important; }
+          .max-w-4xl { max-width: 100% !important; margin: 0 !important; width: 100% !important; }
+          .py-10 { padding-top: 0 !important; padding-bottom: 0 !important; }
+          .bg-white { border: none !important; box-shadow: none !important; }
+          .sm\:rounded-[2rem] { border-radius: 0 !important; }
+          .bg-gradient-to-l, .bg-gradient-to-r, .bg-slate-50, .bg-slate-50\/50, .h-px, .border-t { display: none !important; }
+          
+          /* إجبار المتصفح على إظهار ألوان الخلفية والصور */
+          .print-header p { 
+            font-size: 10pt !important; 
+            line-height: 1.4 !important;
+            margin: 0 !important;
+          }
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          .no-print { display: none !important; }
-          img { 
-            display: block !important; 
-            max-width: 100% !important;
+          
+          /* تحويل الشبكة إلى عرض كامل في الطباعة */
+          .grid { 
+            display: grid !important; 
+            grid-template-columns: repeat(4, 1fr) !important; 
+            gap: 8px 20px !important; 
           }
-          /* إزالة الظلال والحدود المتقطعة التي قد تحجب الصورة في الطباعة */
-          label[for="photo"], .shadow-inner {
-            box-shadow: none !important;
-            border: 1px solid #e2e8f0 !important;
+          .sm\:col-span-2 { grid-column: span 4 !important; }
+          
+          /* تنسيق العناوين الجانبية */
+          h4 { display: none !important; }
+
+          /* تنسيق الحقول */
+          label { font-size: 9pt !important; color: #475569 !important; font-weight: 900 !important; }
+          input, select { 
+            border: none !important; 
+            border-bottom: 1px solid #cbd5e1 !important; 
+            padding: 2px 0 !important; 
+            background: transparent !important;
+            font-size: 10pt !important;
+            font-weight: bold !important;
+            color: black !important;
+          }
+
+          /* تنسيق الصورة - محسن للطباعة */
+          .photo-box, label[for="photo"] { 
+            display: block !important; 
+            border: 1.5pt solid #000 !important; 
+            width: 3.5cm !important; 
+            height: 4.5cm !important; 
+            overflow: hidden !important; 
+            position: static !important;
+            background: #fff !important;
+            page-break-inside: avoid !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          .photo-box img, img[alt="صورة الطالب"] {
+            display: block !important;
+            width: 3.5cm !important;
+            height: 4.5cm !important;
+            object-fit: cover !important;
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+            content-visibility: visible !important;
+            contain-intrinsic-size: 3.5cm 4.5cm !important;
+            image-rendering: -webkit-optimize-contrast !important;
+            max-width: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
           }
         }
       ` }} />
@@ -557,7 +681,25 @@ export default function StudentDashboard() {
 
       <div className="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8">
         <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden sm:rounded-[2rem]">
-          <div className="px-4 py-8 sm:px-10 border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
+          {/* ترويسة الاستمارة - تظهر فقط عند الطباعة */}
+          <div className="hidden print:grid grid-cols-3 items-center px-10 py-6 border-b-2 border-slate-900 mb-4 print-header">
+            <div className="text-right space-y-0.5">
+              <p className="font-black">جمهورية العراق</p>
+              <p className="font-bold">وزارة التربية</p>
+              <p className="font-bold">المديرية العامة لتربية النجف الأشرف</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
+              <h2 className="hidden">استمارة تسجيل طالب</h2>
+            </div>
+            <div className="text-left space-y-0.5 invisible">
+              <p className="font-black">Republic of Iraq</p>
+              <p className="font-bold">Ministry of Education</p>
+              <p className="font-bold">General Directorate of Education</p>
+            </div>
+          </div>
+
+          <div className="px-4 py-8 sm:px-10 border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white print:hidden">
             <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600">
               نموذج تسجيل الطلبة
             </h3>
@@ -603,22 +745,29 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-black text-slate-700 mb-1 mr-1">
+                  <label className="block text-sm font-black text-slate-700 mb-1 mr-1 print:hidden">
                     الصورة الشخصية الرسمية <span className="text-red-500 mr-1">*</span>
                   </label>
-                  <div className="mt-2 flex flex-col md:flex-row gap-6 items-stretch">
+                <div className="mt-2 flex flex-col md:flex-row gap-6 items-stretch print:flex-row print:items-center print:gap-0">
                     <label 
                       htmlFor="photo" 
-                      className={`relative flex-shrink-0 h-44 w-32 cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-400 bg-red-50/30 ring-4 ring-red-500/5' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10'}`}
+                      className={`photo-box relative flex-shrink-0 h-44 w-32 cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden flex items-center justify-center transition-all group ${formErrors.photo ? 'border-red-400 bg-red-50/30 ring-4 ring-red-500/5' : 'border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-xl hover:shadow-blue-500/10'}`}
                     >
                       {photoPreview ? (
                         <>
-                          <img src={photoPreview} alt="صورة الطالب" className="h-full w-full object-cover shadow-inner" />
+                          <img 
+                            src={photoPreview} 
+                            alt="صورة الطالب" 
+                            className="h-full w-full object-cover shadow-inner print:shadow-none" 
+                            crossOrigin={photoPreview.startsWith('http') ? 'anonymous' : undefined}
+                            loading="eager" // Ensure image loads immediately for print
+                            decoding="async"
+                          />
                         </>
                       ) : (
                         <div className="flex flex-col items-center gap-2">
@@ -628,7 +777,8 @@ export default function StudentDashboard() {
                       )}
                     </label>
 
-                    <div className="flex-1 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner relative overflow-hidden">
+                {/* معلومات الطالب بجانب الصورة تظهر في الطباعة فقط */}
+                    <div className="instructions-panel flex-1 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/20"></div>
                       <h5 className="flex items-center text-xs font-black text-slate-700 mb-3">
                         <Info className="w-4 h-4 ml-2 text-blue-600" />
@@ -663,7 +813,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -713,7 +863,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -852,7 +1002,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -885,7 +1035,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -913,7 +1063,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -976,7 +1126,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section Separator */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 print:hidden">
                   <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent w-full my-1"></div>
                 </div>
 
@@ -1004,12 +1154,27 @@ export default function StudentDashboard() {
 
               </div>
 
-              <div className="pt-8 mt-8 border-t border-slate-100">
-                <div className="flex justify-end">
+              <div className="pt-8 mt-8 border-t border-slate-100 print:hidden">
+                <div className="flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Preload check before print
+                      if (photoPreview && !photoPreview.startsWith('data:')) {
+                        console.warn('Image may not print - not data URL');
+                      }
+                      window.print();
+                    }}
+                    className="inline-flex justify-center py-3.5 px-8 border border-slate-200 shadow-lg shadow-slate-200/50 text-base font-bold rounded-2xl text-slate-700 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                    title="طباعة الاستمارة مع الصورة الشخصية ✓"
+                  >
+                    <Printer className="ml-2 h-5 w-5" />
+                    طباعة الاستمارة
+                  </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="ml-3 inline-flex justify-center py-3.5 px-8 border border-transparent shadow-lg shadow-blue-500/25 text-base font-bold rounded-2xl text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:hover:scale-100 transition-all duration-300"
+                    className="inline-flex justify-center py-3.5 px-8 border border-transparent shadow-lg shadow-blue-500/25 text-base font-bold rounded-2xl text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:hover:scale-100 transition-all duration-300"
                   >
                     {loading ? (
                       <div className="flex items-center">
